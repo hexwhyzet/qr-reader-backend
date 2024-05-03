@@ -90,3 +90,5 @@ admin.site.register(Guard, GuardAdmin)
 admin.site.register(Round, RoundAdmin)
 admin.site.register(Visit, VisitAdmin)
 admin.site.register(Point, PointAdmin)
+
+admin.site.index_title = None

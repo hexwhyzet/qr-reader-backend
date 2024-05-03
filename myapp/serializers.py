@@ -16,7 +16,7 @@ class SuccessJsonResponse(JsonResponse):
 class GuardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Guard
-        fields = '__all__'
+        fields = ['name', 'code']
 
 
 class PointSerializer(serializers.ModelSerializer):

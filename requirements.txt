@@ -2,3 +2,4 @@ qrcode[pil]
 django
 djangorestframework
 pytz
+django-admin-interface
