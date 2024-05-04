@@ -19,9 +19,6 @@ class Command(BaseCommand):
         content_types = ContentType.objects.filter(app_label=app_name)
 
         for content_type in content_types:
-
-            print(content_type.model)
-
             if content_type.model in ['round', 'visit']:
                 permissions = Permission.objects.filter(content_type=content_type).exclude(
                     codename__in=['delete_' + content_type.model,

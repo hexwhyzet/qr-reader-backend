@@ -3,10 +3,9 @@ from io import BytesIO
 
 import pytz
 import qrcode
-from django.db import models
-from django.http import HttpResponse
-from django.utils.html import format_html
+from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
+from django.db import models
 
 from myproject import settings
 
@@ -24,8 +23,11 @@ def pretty_datetime(dt):
 
 
 class Guard(models.Model):
-    name = models.CharField(max_length=100)
-    code = models.CharField(max_length=6, unique=True, default=generate_six_digit_code, editable=False)
+    name = models.CharField(max_length=100, verbose_name='Имя')
+    code = models.CharField(max_length=6, unique=True, default=generate_six_digit_code, editable=False,
+                            verbose_name='Код охранника')
+    manager = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'groups__name': 'Managers'},
+                                default=None, related_name='guards', verbose_name='Менеджер')
 
     def __str__(self):
         return f"{self.name} ({self.code})"
@@ -37,10 +39,10 @@ class Guard(models.Model):
 
 class Point(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100, unique=True)  # Имя точки
+    name = models.CharField(max_length=100, unique=True, verbose_name='Имя')  # Имя точки
 
     def __str__(self):
-        return f"{self.name} ({self.id})"
+        return f"{self.name}"
 
     class Meta:
         verbose_name = "Точка обхода"
@@ -55,9 +57,9 @@ class Point(models.Model):
 
 
 class Round(models.Model):
-    guard = models.ForeignKey(Guard, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    is_active = models.BooleanField(default=True)
+    guard = models.ForeignKey(Guard, on_delete=models.CASCADE, verbose_name=Guard._meta.verbose_name)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Время')
+    is_active = models.BooleanField(default=True, verbose_name='Обход идет')
 
     def __str__(self):
         return f"{self.guard.name} начал обход {pretty_datetime(self.created_at)} (обход закончен: {'Нет' if self.is_active else 'Да'})"
@@ -68,9 +70,10 @@ class Round(models.Model):
 
 
 class Visit(models.Model):
-    point = models.ForeignKey(Point, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    round = models.ForeignKey(Round, on_delete=models.CASCADE, related_name='visits')
+    point = models.ForeignKey(Point, on_delete=models.CASCADE, verbose_name=Point._meta.verbose_name)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Время')
+    round = models.ForeignKey(Round, on_delete=models.CASCADE, related_name='visits',
+                              verbose_name=Round._meta.verbose_name)
 
     def __str__(self):
         return f"{self.round.guard.name} посетил {self.point.name} {pretty_datetime(self.created_at)}"
