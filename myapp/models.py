@@ -25,7 +25,7 @@ def pretty_datetime(dt):
 class Guard(models.Model):
     name = models.CharField(max_length=100, verbose_name='Имя')
     code = models.CharField(max_length=6, unique=True, default=generate_six_digit_code, editable=False,
-                            verbose_name='Код охранника')
+                            verbose_name='Код сотрудника СБ')
     manager = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'groups__name': 'Managers'},
                                 default=None, related_name='guards', verbose_name='Менеджер')
 
@@ -33,8 +33,8 @@ class Guard(models.Model):
         return f"{self.name} ({self.code})"
 
     class Meta:
-        verbose_name = "Охранник"
-        verbose_name_plural = "Охранники"
+        verbose_name = "Сотрудник СБ"
+        verbose_name_plural = "Сотрудники СБ"
 
 
 class Point(models.Model):
