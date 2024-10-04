@@ -1,12 +1,12 @@
 version: '3.8'
 
 services:
-  django:
+  web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - .:/app
+    command: gunicorn --bind 0.0.0.0:8000 myproject.wsgi
     ports:
       - "8000:8000"
-    environment:
-      - DEBUG=1
+    volumes:
+      - .:/app
+    env_file:
+      - .env
