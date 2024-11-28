@@ -4,6 +4,7 @@ from io import BytesIO
 import pytz
 import qrcode
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.db import models
 
@@ -26,8 +27,9 @@ class Guard(models.Model):
     name = models.CharField(max_length=100, verbose_name='Имя')
     code = models.CharField(max_length=6, unique=True, default=generate_six_digit_code, editable=False,
                             verbose_name='Код сотрудника')
-    manager = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'groups__name': 'Managers'},
-                                default=None, related_name='guards', verbose_name='Менеджер')
+
+    managers = models.ManyToManyField(User, limit_choices_to={'groups__name': 'Managers'}, default=None,
+                                      related_name='guards', verbose_name='Менеджеры', blank=False)
 
     def __str__(self):
         return f"{self.name} ({self.code})"
@@ -38,8 +40,23 @@ class Guard(models.Model):
 
 
 class Point(models.Model):
+    class PointType(models.TextChoices):
+        DEFAULT = 'default', 'Обычная точка'
+        FIRE_EXTINGUISHER = 'fire_extinguisher', 'Огнетушитель'
+
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100, unique=True, verbose_name='Имя')  # Имя точки
+    point_type = models.CharField(
+        max_length=20,
+        choices=PointType.choices,
+        default=PointType.DEFAULT,
+        verbose_name='Тип точки',
+    )
+    expiration_date = models.DateField(
+        verbose_name='Дата истечения',
+        null=True,
+        blank=True,
+    )
 
     def __str__(self):
         return f"{self.name}"
@@ -54,6 +71,14 @@ class Point(models.Model):
         qr.save(buffer, format="PNG")
         buffer.seek(0)
         return ContentFile(buffer.read(), name=f'{self.name}_qr.png')
+
+    def clean(self):
+        if self.point_type == self.PointType.FIRE_EXTINGUISHER:
+            if not self.expiration_date:
+                raise ValidationError({'expiration_date': 'Дата истечения обязательна для огнетушителей.'})
+        else:
+            self.expiration_date = None
+            self.has_fire_extinguisher = False
 
 
 class Round(models.Model):

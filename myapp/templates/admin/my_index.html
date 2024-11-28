@@ -1,0 +1,17 @@
+{% extends "admin/index.html" %}
+
+{% block sidebar %}
+    {#    {{ block.super }}#}
+    {#    <div>#}
+    {#        <div>#}
+    {#            <a href="/export-fire-extinguishers" class="bottonwatch">New#}
+    {#                Button</a>#}
+    {#        </div>#}
+    {#    </div>#}
+    {{ block.super }}
+    <div class="custom-button-container" style="margin: 20px 0;">
+        {% for custom_button in custom_buttons %}
+            <a class="button" style="padding: 10px 10px;" href="{{ custom_button.url }}">{{ custom_button.label }}</a>
+        {% endfor %}
+    </div>
+{% endblock %}
