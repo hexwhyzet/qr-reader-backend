@@ -22,7 +22,7 @@ class GuardSerializer(serializers.ModelSerializer):
 class PointSerializer(serializers.ModelSerializer):
     class Meta:
         model = Point
-        fields = ['name', 'point_type', 'expiration_date']
+        fields = ['id', 'name', 'point_type', 'expiration_date']
 
 
 class VisitSerializer(serializers.ModelSerializer):

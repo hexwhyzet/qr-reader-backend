@@ -34,13 +34,9 @@ class RoundStatusView(APIView):
             guard = get_guard(guard_id)
             try:
                 round = get_latest_round(guard)
-                print(round)
-                print(round.visits.all())
-                print(round.is_active)
                 serializer = RoundSerializer(round)
                 return SuccessJsonResponse(data=serializer.data, status=status.HTTP_200_OK)
             except (Exception,) as e:
-                print(e)
                 # workaround for case when Round not started yet
                 return SuccessJsonResponse(data={'is_active': False}, status=status.HTTP_200_OK)
         except (Exception,) as e:

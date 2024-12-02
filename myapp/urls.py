@@ -1,6 +1,7 @@
 from django.urls import path
 
 from myapp.views.guards import GuardView
+from myapp.views.messages import PointMessageView
 from myapp.views.rounds import StartRoundView, EndRoundView, RoundStatusView
 from myapp.views.visits import VisitPointsView
 
@@ -12,4 +13,5 @@ urlpatterns = [
     path('guard/<int:guard_id>/round_status', RoundStatusView.as_view(), name='round-status'),
 
     path('guard/<int:guard_id>/visit_point/<int:point_id>', VisitPointsView.as_view(), name='visit-point'),
+    path('guard/<int:guard_id>/visit_point/<int:point_id>/add_message', PointMessageView.as_view(), name='add-message'),
 ]

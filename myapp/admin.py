@@ -10,14 +10,14 @@ from django.urls import path
 from django.utils.html import format_html
 
 from myapp.excel import fire_extinguishers, guards_stats
-from myapp.models import Guard, Round, Visit, Point
+from myapp.models import Guard, Round, Visit, Point, Message
+from myapp.services.messages import messages_by_user
 
 
 class MyAdminSite(AdminSite):
     index_template = "admin/my_index.html"
 
     def get_urls(self):
-        """Add a custom URL for the export action."""
         urls = super().get_urls()
         custom_urls = [
             path('export-fire-extinguishers/', fire_extinguishers, name='export_fire_extinguishers'),
@@ -34,6 +34,7 @@ class MyAdminSite(AdminSite):
             'label': 'Выгрузить информацию об обходах',
             'url': 'export-guards-stats/',
         }, ]
+        extra_context['message_count'] = len(messages_by_user(request.user))
         return super().index(request, extra_context=extra_context)
 
 
@@ -69,6 +70,8 @@ class GuardAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
+        if not change or not obj.managers:
+            obj.managers.add(request.user)
 
     def get_readonly_fields(self, request, obj=None):
         if request.user.groups.filter(name='Managers').exists():
@@ -148,10 +151,22 @@ class PointAdmin(admin.ModelAdmin):
     qr_code_button.short_description = 'QR Код'
 
 
+class MessageAdmin(admin.ModelAdmin):
+    list_display = ['visit', 'text', 'is_seen']
+    readonly_fields = ['guard', 'visit']
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.groups.filter(name='Managers').exists():
+            return qs.filter(guard__managers=request.user)
+        return qs
+
+
 admin.site = MyAdminSite()
 
 admin.site.register(Guard, GuardAdmin)
 admin.site.register(Round, RoundAdmin)
 admin.site.register(Visit, VisitAdmin)
 admin.site.register(Point, PointAdmin)
+admin.site.register(Message, MessageAdmin)
 admin.site.register(User, UserAdmin)

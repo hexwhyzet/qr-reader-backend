@@ -106,3 +106,17 @@ class Visit(models.Model):
     class Meta:
         verbose_name = "Посещение"
         verbose_name_plural = "Посещения"
+
+
+class Message(models.Model):
+    guard = models.ForeignKey(Guard, on_delete=models.CASCADE, verbose_name=Guard._meta.verbose_name)
+    visit = models.ForeignKey(Visit, on_delete=models.CASCADE, verbose_name=Visit._meta.verbose_name)
+    text = models.CharField(null=False, blank=False, max_length=300)
+    is_seen = models.BooleanField(default=False, verbose_name='Просмотрено')
+
+    def __str__(self):
+        return self.text
+
+    class Meta:
+        verbose_name = "Сообщение"
+        verbose_name_plural = "Сообщение"
