@@ -1,17 +1,47 @@
 import urllib.parse
 
+from django import forms
 from django.contrib import admin
 from django.contrib.admin import AdminSite
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.urls import path
 from django.utils.html import format_html
 
 from myapp.excel import fire_extinguishers, guards_stats
 from myapp.models import Guard, Round, Visit, Point, Message
+from myapp.services.guards import get_manager_guards, get_guard_by_guard_id, get_guards
 from myapp.services.messages import messages_by_user
+
+
+class GuardsStatsForm(forms.Form):
+    ALL_EMPLOYEES_OPTION = -1
+
+    guards = forms.ChoiceField(
+        choices=[],
+        label="Выберите сотрудника",
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-control',  # Добавляем Bootstrap-класс
+            'placeholder': 'Выберите сотрудника'
+        })
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        print(self.request)
+        super().__init__(*args, **kwargs)
+        guards_choices = [(self.ALL_EMPLOYEES_OPTION, "Все сотрудники")] + [
+            (employee.id, employee.name) for employee in get_manager_guards(self.request.user)
+        ]
+        self.fields['guards'].choices = guards_choices
+
+    def get_guards(self):
+        guard_id = self.cleaned_data['guards']
+        return get_manager_guards(self.request.user) if guard_id == self.ALL_EMPLOYEES_OPTION else [
+            get_guard_by_guard_id(guard_id)]
 
 
 class MyAdminSite(AdminSite):
@@ -21,9 +51,20 @@ class MyAdminSite(AdminSite):
         urls = super().get_urls()
         custom_urls = [
             path('export-fire-extinguishers/', fire_extinguishers, name='export_fire_extinguishers'),
-            path('export-guards-stats/', guards_stats, name='guards_stats'),
+            path('export-guards-stats/', self.guards_stats_form, name='guards_stats'),
         ]
         return custom_urls + urls
+
+    def guards_stats_form(self, request):
+        if request.method == 'POST':
+            form = GuardsStatsForm(request.POST, request=request)
+            if form.is_valid():
+                guards = form.get_guards()
+                return guards_stats(guards)
+        else:
+            form = GuardsStatsForm(request=request)
+
+        return render(request, 'guards_stats.html', {'form': form})
 
     def index(self, request, extra_context=None):
         extra_context = extra_context or {}

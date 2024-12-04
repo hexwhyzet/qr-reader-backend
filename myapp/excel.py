@@ -1,10 +1,10 @@
-from datetime import datetime
-
 import openpyxl
 from django.http import HttpResponse
+from django.utils.encoding import escape_uri_path
+from django.utils.timezone import localtime, datetime, get_current_timezone
 from openpyxl.styles import Font, PatternFill, Alignment, colors
 
-from myapp.models import Point, Guard, Round
+from myapp.models import Point, Round
 
 
 def adjust_col_width(worksheet):
@@ -71,7 +71,7 @@ def fire_extinguishers(*args):
 
     adjust_col_width(ws)
 
-    current_date = datetime.now().strftime('%Y-%m-%d')
+    current_date = datetime.now(tz=get_current_timezone()).strftime('%Y-%m-%d')
 
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -82,11 +82,10 @@ def fire_extinguishers(*args):
     return response
 
 
-def guards_stats(*args):
+def guards_stats(guards):
     wb = openpyxl.Workbook()
     ws_first = True
 
-    guards = Guard.objects.all()
     for guard in guards:
         if ws_first:
             ws = wb.active
@@ -109,7 +108,7 @@ def guards_stats(*args):
                     row = [
                         round_obj.id,
                         visit.point.name,
-                        visit.created_at.strftime('%Y-%m-%d %H:%M:%S')
+                        localtime(visit.created_at).strftime('%Y-%m-%d %H:%M:%S')
                     ]
 
                     ws.append(row)
@@ -126,9 +125,12 @@ def guards_stats(*args):
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     )
 
-    current_date = datetime.now().strftime('%Y-%m-%d')
+    current_date = datetime.now(tz=get_current_timezone()).strftime('%Y-%m-%d')
 
-    response['Content-Disposition'] = f'attachment; filename="rounds_export_{current_date}.xlsx"'
+    filename = f'rounds_export_{current_date}.xlsx' if len(
+        guards) != 1 else f'rounds_export_{guards[0].name.replace(" ", "_")}_{current_date}.xlsx'
+
+    response['Content-Disposition'] = f"attachment; filename*=utf-8''{escape_uri_path(filename)}"
 
     wb.save(response)
     return response

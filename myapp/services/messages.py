@@ -6,7 +6,6 @@ def create_message(guard, visit, text):
 
 
 def messages_by_user(user):
-    print(user.is_superuser)
     if user.is_superuser or user.groups.filter(name='Senior Managers').exists():
         return Message.objects.filter(is_seen=False).all()
     elif user.groups.filter(name='Managers').exists():

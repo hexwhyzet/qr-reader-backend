@@ -1,0 +1,8 @@
+<form method="post">
+    <h1>Статистика обходов сотрудника</h1>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="form-group">
+        <input type="submit" value="Скачать файл">
+    </div>
+</form>

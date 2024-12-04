@@ -14,8 +14,9 @@ class VisitPointsView(APIView):
             guard = get_guard(guard_id)
             round = get_latest_round(guard)
             point = get_point(point_id)
-            visit = create_visit(guard, round, point)
+            visit = create_visit(round, point)
             serializer = VisitSerializer(visit)
             return SuccessJsonResponse(data=serializer.data, status=status.HTTP_200_OK)
         except (Exception,) as e:
+            print(e)
             return SuccessJsonResponse(success=False, status=status.HTTP_400_BAD_REQUEST)
