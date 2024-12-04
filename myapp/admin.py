@@ -39,7 +39,7 @@ class GuardsStatsForm(forms.Form):
         self.fields['guards'].choices = guards_choices
 
     def get_guards(self):
-        guard_id = self.cleaned_data['guards']
+        guard_id = int(self.cleaned_data['guards'])
         return get_manager_guards(self.request.user) if guard_id == self.ALL_EMPLOYEES_OPTION else [
             get_guard_by_guard_id(guard_id)]
 
