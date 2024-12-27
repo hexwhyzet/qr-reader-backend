@@ -3,61 +3,75 @@
 {% if app_list %}
     {% for app in app_list %}
         <div class="app-{{ app.app_label }} module{% if app.app_url in request.path|urlencode %} current-app{% endif %}">
-            <table>
+            <table style="width: 100%">
                 <caption>
                     <a href="{{ app.app_url }}" class="section"
                        title="{% blocktranslate with name=app.name %}Models in the {{ name }} application{% endblocktranslate %}">{{ app.name }}</a>
                 </caption>
-                {% for model in app.models %}
-                    <tr class="model-
-                            {{ model.object_name|lower }}{% if model.admin_url in request.path|urlencode %} current-model{% endif %}">
-                        {% if model.admin_url %}
-                            <th scope="row"><a href="{{ model.admin_url }}"
-                                    {% if model.admin_url in request.path|urlencode %}
-                                               aria-current="page"{% endif %}>{{ model.name }}</a></th>
-                        {% else %}
-                            <th scope="row">{{ model.name }}</th>
-                        {% endif %}
-
-                        <!-- CUSTOMIZED PART -->
-                        {% if model.object_name|lower == "message" and message_count > 0 %}
-                            <td class="new-messages">
-                                Новые сообщения: <span id="message-count">{{ message_count }}</span>
-                            </td>
-                            <style>
-                                .new-messages {
-                                    color: white;
-                                    background-color: #C00000;
-                                    font-weight: bold;
-                                    text-align: center;
-                                }
-                            </style>
-                        {% else %}
-                            <td>
-                            </td>
-                        {% endif %}
-                        <!-- END OF CUSTOMIZED PART -->
-
-                        {% if model.add_url %}
-                            <td><a href="{{ model.add_url }}" class="addlink">{% translate 'Add' %}</a></td>
-                        {% else %}
-                            <td></td>
-                        {% endif %}
-
-                        {% if model.admin_url and show_changelinks %}
-                            {% if model.view_only %}
-                                <td><a href="{{ model.admin_url }}" class="viewlink">{% translate 'View' %}</a></td>
+                {% if not is_index %} <!-- Workaround to display only app names on index page -->
+                    {% for model in app.models %}
+                        <tr class="model-{{ model.object_name|lower }}{% if model.admin_url in request.path|urlencode %} current-model{% endif %}">
+                            {% if model.admin_url %}
+                                <th scope="row"><a href="{{ model.admin_url }}"
+                                        {% if model.admin_url in request.path|urlencode %}
+                                                   aria-current="page"{% endif %}>{{ model.name }}</a></th>
                             {% else %}
-                                <td><a href="{{ model.admin_url }}" class="changelink">{% translate 'Change' %}</a></td>
+                                <th scope="row">{{ model.name }}</th>
                             {% endif %}
-                        {% elif show_changelinks %}
-                            <td></td>
-                        {% endif %}
-                    </tr>
-                {% endfor %}
+
+                            <!-- CUSTOMIZED PART -->
+                            {% if model.object_name|lower == "message" and message_count > 0 %}
+                                <td class="new-messages">
+                                    {% if show_changelinks %}
+                                        Новые сообщения: <span id="message-count">{{ message_count }}</span>
+                                    {% else %}
+                                        <span id="message-count">{{ message_count }}</span>
+                                    {% endif %}
+                                </td>
+                                <style>
+                                    .new-messages {
+                                        color: white;
+                                        background-color: #C00000;
+                                        font-weight: bold;
+                                        text-align: center;
+                                    }
+                                </style>
+                            {% else %}
+                                <td>
+                                </td>
+                            {% endif %}
+                            <!-- END OF CUSTOMIZED PART -->
+
+                            {% if model.add_url %}
+                                <td><a href="{{ model.add_url }}" class="addlink">{% translate 'Add' %}</a></td>
+                            {% else %}
+                                <td></td>
+                            {% endif %}
+
+                            {% if model.admin_url and show_changelinks %}
+                                {% if model.view_only %}
+                                    <td><a href="{{ model.admin_url }}" class="viewlink">{% translate 'View' %}</a></td>
+                                {% else %}
+                                    <td><a href="{{ model.admin_url }}" class="changelink">{% translate 'Change' %}</a>
+                                    </td>
+                                {% endif %}
+                            {% elif show_changelinks %}
+                                <td></td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                {% endif %}
             </table>
         </div>
     {% endfor %}
+    {% if not is_index %} <!-- Workaround to display only app names on index page -->
+        <div class="custom-button-container" style="margin: 20px 0; display: flex; flex-direction: column; gap: 10px;">
+            {% for custom_button in custom_buttons %}
+                <a class="button" style="padding: 10px 10px;"
+                   href="{{ custom_button.url }}">{{ custom_button.label }}</a>
+            {% endfor %}
+        </div>
+    {% endif %}
 {% else %}
     <p>{% translate 'You don’t have permission to view or edit anything.' %}</p>
 {% endif %}

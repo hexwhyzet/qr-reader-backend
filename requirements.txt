@@ -5,3 +5,5 @@ pytz==2024.1
 django-admin-interface==0.28.6
 gunicorn==23.0.0
 openpyxl==3.1.5
+djangorestframework_simplejwt==5.3.1
+django-debug-toolbar==4.4.6

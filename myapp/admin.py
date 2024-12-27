@@ -1,18 +1,20 @@
+import os
 import urllib.parse
 
 from django import forms
 from django.contrib import admin
 from django.contrib.admin import AdminSite
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import path
+from django.urls import reverse
 from django.utils.html import format_html
 
 from myapp.excel import fire_extinguishers, guards_stats
 from myapp.models import Guard, Round, Visit, Point, Message
-from myapp.services.guards import get_manager_guards, get_guard_by_guard_id, get_guards
+from myapp.services.guards import get_manager_guards, get_guard_by_guard_id
 from myapp.services.messages import messages_by_user
 
 
@@ -44,14 +46,36 @@ class GuardsStatsForm(forms.Form):
             get_guard_by_guard_id(guard_id)]
 
 
+class GroupUserManagementForm(forms.Form):
+    add_user = forms.ModelChoiceField(
+        queryset=User.objects,
+        required=False,
+        label="Добавить в сервис",
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.group = kwargs.pop('group', None)
+        super().__init__(*args, **kwargs)
+        self.fields['add_user'].queryset = User.objects.exclude(groups=self.group)
+
+    def save(self):
+        new_group_user = self.cleaned_data['add_user']
+        self.group.user_set.add(new_group_user)
+        self.group.save()
+
+
 class MyAdminSite(AdminSite):
-    index_template = "admin/my_index.html"
+    def get_absolute_url(self, request, view_name, *args, **kwargs):
+        return os.path.join(f'http://{request.get_host()}', 'admin', view_name)
 
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
             path('export-fire-extinguishers/', fire_extinguishers, name='export_fire_extinguishers'),
             path('export-guards-stats/', self.guards_stats_form, name='guards_stats'),
+            path('manage_group_users/<str:group_name>', self.manage_group_users, name='manage_group_users'),
+            path('manage_group_users/<str:group_name>/delete/<str:user_id>', self.manage_group_users_delete,
+                 name='manage_group_users_delete'),
         ]
         return custom_urls + urls
 
@@ -66,17 +90,40 @@ class MyAdminSite(AdminSite):
 
         return render(request, 'guards_stats.html', {'form': form})
 
-    def index(self, request, extra_context=None):
-        extra_context = extra_context or {}
+    def manage_group_users(self, request, group_name):
+        group = get_object_or_404(Group, name=group_name)
+        if request.method == 'POST':
+            form = GroupUserManagementForm(request.POST, group=group)
+            if form.is_valid():
+                form.save()
+        else:
+            form = GroupUserManagementForm(group=group)
+
+        return render(request, 'manage_group_users.html',
+                      {'form': form, 'group': group, 'users_in_group': group.user_set.all()})
+
+    def manage_group_users_delete(self, request, group_name, user_id):
+        if request.method == 'POST':
+            group = get_object_or_404(Group, name=group_name)
+            user = get_object_or_404(User, id=user_id)
+            group.user_set.remove(user)
+            return redirect(reverse('admin:manage_group_users', kwargs={'group_name': group_name}))
+
+    def each_context(self, request):
+        extra_context = super().each_context(request)
         extra_context['custom_buttons'] = [{
             'label': 'Выгрузить информацию об огнетушителях',
-            'url': 'export-fire-extinguishers/',
+            'url': self.get_absolute_url(request, 'export-fire-extinguishers/'),
         }, {
             'label': 'Выгрузить информацию об обходах',
-            'url': 'export-guards-stats/',
-        }, ]
+            'url': self.get_absolute_url(request, 'export-guards-stats/'),
+        }, {
+            'label': 'Добавить сотрудников в сервис',
+            'url': self.get_absolute_url(request, 'manage_group_users/qr_guard'),
+        }]
+        extra_context['is_index'] = request.path.endswith('/admin/')
         extra_context['message_count'] = len(messages_by_user(request.user))
-        return super().index(request, extra_context=extra_context)
+        return extra_context
 
 
 class VisitInline(admin.StackedInline):
@@ -174,6 +221,7 @@ def generate_qr_code(request, object_id, force_download=True):
 
 class PointAdmin(admin.ModelAdmin):
     list_display = ['name', 'qr_code_button']
+    search_fields = ['name__icontains']
 
     def qr_code_button(self, obj):
         return format_html('<a class="button" href="{}">Показать</a>&nbsp;<a class="button" href="{}">Скачать</a>',

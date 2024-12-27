@@ -31,6 +31,8 @@ class Guard(models.Model):
     managers = models.ManyToManyField(User, limit_choices_to={'groups__name': 'Managers'}, default=None,
                                       related_name='guards', verbose_name='Менеджеры', blank=False)
 
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='guard_profile', default=None, null=True)
+
     def __str__(self):
         return f"{self.name} ({self.code})"
 
