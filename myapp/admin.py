@@ -1,10 +1,11 @@
+import enum
 import os
 import urllib.parse
 
 from django import forms
 from django.contrib import admin
 from django.contrib.admin import AdminSite
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import UserAdmin, GroupAdmin
 from django.contrib.auth.models import User, Group
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
@@ -12,10 +13,15 @@ from django.urls import path
 from django.urls import reverse
 from django.utils.html import format_html
 
+from myapp.custom_groups import QRManager
 from myapp.excel import fire_extinguishers, guards_stats
 from myapp.models import Guard, Round, Visit, Point, Message
 from myapp.services.guards import get_manager_guards, get_guard_by_guard_id
 from myapp.services.messages import messages_by_user
+
+
+class ServicesEnum(enum.StrEnum):
+    QR_GUARD = 'myapp'
 
 
 class GuardsStatsForm(forms.Form):
@@ -109,20 +115,33 @@ class MyAdminSite(AdminSite):
             group.user_set.remove(user)
             return redirect(reverse('admin:manage_group_users', kwargs={'group_name': group_name}))
 
+    def get_buttons(self, request, app_name):
+        if app_name == ServicesEnum.QR_GUARD.value:
+            result = [
+                {
+                    'label': 'Выгрузить информацию об огнетушителях',
+                    'url': self.get_absolute_url(request, 'export-fire-extinguishers/'),
+                },
+                {
+                    'label': 'Выгрузить информацию об обходах',
+                    'url': self.get_absolute_url(request, 'export-guards-stats/'),
+                }
+            ]
+            if request.user.is_superuser or request.user.groups.filter(name=QRManager.name).exists():
+                result.append({
+                    'label': 'Добавить сотрудников в сервис',
+                    'url': self.get_absolute_url(request, 'manage_group_users/qr_guard'),
+                })
+            return result
+        return []
+
     def each_context(self, request):
+        app_name = request.path.split('/')[2] or None
         extra_context = super().each_context(request)
-        extra_context['custom_buttons'] = [{
-            'label': 'Выгрузить информацию об огнетушителях',
-            'url': self.get_absolute_url(request, 'export-fire-extinguishers/'),
-        }, {
-            'label': 'Выгрузить информацию об обходах',
-            'url': self.get_absolute_url(request, 'export-guards-stats/'),
-        }, {
-            'label': 'Добавить сотрудников в сервис',
-            'url': self.get_absolute_url(request, 'manage_group_users/qr_guard'),
-        }]
+        extra_context['custom_buttons'] = self.get_buttons(request, app_name)
         extra_context['is_index'] = request.path.endswith('/admin/')
         extra_context['message_count'] = len(messages_by_user(request.user))
+        extra_context['app_name'] = app_name
         return extra_context
 
 
@@ -259,3 +278,4 @@ admin.site.register(Visit, VisitAdmin)
 admin.site.register(Point, PointAdmin)
 admin.site.register(Message, MessageAdmin)
 admin.site.register(User, UserAdmin)
+admin.site.register(Group, GroupAdmin)
