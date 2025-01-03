@@ -26,9 +26,15 @@ roles = {
         # no access to admin panel
     },
     'Canteen Manager': {
-
+        'dish': [PermissionType.VIEW],
+        'order': ALL_PERMISSIONS,
+        'feedback': [PermissionType.VIEW]
     },
-    'Canteen Employee': {},
+    'Canteen Employee': {
+        'dish': ALL_PERMISSIONS,
+        'order': [PermissionType.VIEW],
+        'feedback': [PermissionType.ADD]
+    },
     'User Manager': {
         'user': ALL_PERMISSIONS,
     }
