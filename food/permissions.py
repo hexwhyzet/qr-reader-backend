@@ -1,16 +1,4 @@
 from rest_framework import permissions
-from django.utils import timezone
-from datetime import timedelta
-
-class CanCreateOnly(permissions.BasePermission):
-    """
-    Разрешает только создание объектов.
-    """
-    def has_permission(self, request, view):
-        if request.method == 'POST':
-            return True
-        return False
-
 
 class CanAccessOrder(permissions.BasePermission):
     """

@@ -1,12 +1,12 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
-from django.db.models import Count
 from food.models import Dish, Order, Feedback
 from food.serializers import DishSerializer, OrderSerializer, FeedbackSerializer
-from food.permissions import CanCreateOnly, CanAccessOrder, CanAccessOrderStats
+from food.permissions import CanAccessOrder, CanAccessOrderStats
+from food.services.order_statistics import OrderService
 
 
 class DishViewSet(viewsets.ReadOnlyModelViewSet):
@@ -20,7 +20,19 @@ class OrderViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, DjangoModelPermissions, CanAccessOrder]
     
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user)
+        return Order.objects.filter(user=self.request.user, is_deleted=False)
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        reason = request.data.get('reason', 'Причина не указана')
+        instance.delete(reason=reason)
+        return Response(
+            {
+                "detail": "Заказ удалён",
+                "reason": reason
+            },
+            status=status.HTTP_204_NO_CONTENT
+        )
     
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated, CanAccessOrderStats])
     def aggregate_orders(self, request):
@@ -38,21 +50,12 @@ class OrderViewSet(viewsets.ModelViewSet):
         else:
             date = timezone.now().date()
         
-        aggregate_data = Order.objects.filter(created_at__date=date) \
-                                      .values('dish__name', 'dish__id') \
-                                      .annotate(total_orders=Count('id'),)
-                                      
-        result = []
-        for item in aggregate_data:
-            result.append({
-                'dish': item['dish__name'],
-                'total_orders': item['total_orders'],
-            })
-        
-        return Response(result)
+        aggregate_data = OrderService.calc_statistic(date)
+
+        return Response(aggregate_data)
 
 
 class FeedbackViewSet(viewsets.ModelViewSet):
-    queryset = Feedback.objects.none()
+    queryset = Feedback.objects.all()
     serializer_class = FeedbackSerializer
-    permission_classes = [IsAuthenticated, DjangoModelPermissions, CanCreateOnly]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]

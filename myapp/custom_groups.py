@@ -27,6 +27,10 @@ class CanteenManager(CustomGroup):
     name = "canteen_manager"
     verbose_name = "Canteen Manager"
     
+class CanteenAdminManager(CustomGroup):
+    name = "canteen_admin_manager"
+    verbose_name = "Canteen Admin Manager"
+    
 class CanteenEmployee(CustomGroup):
     name = "canteen_employee"
     verbose_name = "Canteen Employee"

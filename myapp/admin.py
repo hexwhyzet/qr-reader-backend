@@ -7,21 +7,26 @@ from django.contrib import admin
 from django.contrib.admin import AdminSite
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
 from django.contrib.auth.models import User, Group
+from django.contrib.auth.forms import UserChangeForm
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import path
 from django.urls import reverse
 from django.utils.html import format_html
 
-from myapp.custom_groups import QRManager
+from myapp.custom_groups import QRManager, CanteenManager
 from myapp.excel import fire_extinguishers, guards_stats
 from myapp.models import Guard, Round, Visit, Point, Message
 from myapp.services.guards import get_manager_guards, get_guard_by_guard_id
 from myapp.services.messages import messages_by_user
+from myapp.admin_mixins import CustomAdmin
+from food.admin import register_food_admin
+from food.models import Feedback
 
 
 class ServicesEnum(enum.StrEnum):
     QR_GUARD = 'myapp'
+    CANTEEN = 'food'
 
 
 class GuardsStatsForm(forms.Form):
@@ -71,6 +76,17 @@ class GroupUserManagementForm(forms.Form):
 
 
 class MyAdminSite(AdminSite):
+    def register(self, model_or_iterable, admin_class=None, **options):
+        if admin_class is None:
+            admin_class = CustomAdmin
+        super().register(model_or_iterable, admin_class, **options)
+        
+    def app_index(self, request, app_label, extra_context=None):
+        extra_context = extra_context or {}
+        if app_label == 'food':
+            extra_context['unread_feedback_count'] = Feedback.objects.filter(is_read=False).count()
+        return super().app_index(request, app_label, extra_context)
+    
     def get_absolute_url(self, request, view_name, *args, **kwargs):
         return os.path.join(f'http://{request.get_host()}', 'admin', view_name)
 
@@ -133,6 +149,14 @@ class MyAdminSite(AdminSite):
                     'url': self.get_absolute_url(request, 'manage_group_users/qr_guard'),
                 })
             return result
+        
+        if app_name == ServicesEnum.CANTEEN:
+            if request.user.is_superuser or request.user.groups.filter(name=CanteenManager.name).exists():
+                return [{
+                    'label': 'Добавить сотрудников в сервис',
+                    'url': self.get_absolute_url(request, 'manage_group_users/canteen_employee'),
+                }]
+
         return []
 
     def each_context(self, request):
@@ -154,7 +178,7 @@ class VisitInline(admin.StackedInline):
     readonly_fields = ['point', 'created_at']
 
 
-class GuardAdmin(admin.ModelAdmin):
+class GuardAdmin(CustomAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if request.user.groups.filter(name='Managers').exists():
@@ -186,7 +210,7 @@ class GuardAdmin(admin.ModelAdmin):
         return []
 
 
-class RoundAdmin(admin.ModelAdmin):
+class RoundAdmin(CustomAdmin):
     list_filter = [
         "guard",
     ]
@@ -203,7 +227,7 @@ class RoundAdmin(admin.ModelAdmin):
     inlines = [VisitInline]
 
 
-class VisitAdmin(admin.ModelAdmin):
+class VisitAdmin(CustomAdmin):
     list_filter = [
         "point",
     ]
@@ -238,7 +262,7 @@ def generate_qr_code(request, object_id, force_download=True):
     return response
 
 
-class PointAdmin(admin.ModelAdmin):
+class PointAdmin(CustomAdmin):
     list_display = ['name', 'qr_code_button']
     search_fields = ['name__icontains']
 
@@ -259,7 +283,7 @@ class PointAdmin(admin.ModelAdmin):
     qr_code_button.short_description = 'QR Код'
 
 
-class MessageAdmin(admin.ModelAdmin):
+class MessageAdmin(CustomAdmin):
     list_display = ['visit', 'text', 'is_seen']
     readonly_fields = ['guard', 'visit']
 
@@ -269,6 +293,33 @@ class MessageAdmin(admin.ModelAdmin):
             return qs.filter(guard__managers=request.user)
         return qs
 
+class CustomUserChangeForm(UserChangeForm):
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        new_fieldsets = []
+        for name, options in fieldsets:
+            fields = tuple(f for f in options.get('fields', []) if f != 'user_permissions')
+            new_fieldsets.append((name, {**options, 'fields': fields}))
+        return new_fieldsets
+    
+class CustomUserAdmin(UserAdmin):
+    form = CustomUserChangeForm
+    
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        new_fieldsets = []
+        for name, options in fieldsets:
+            fields = options.get('fields', [])
+            fields = tuple(f for f in fields if f != 'user_permissions')
+            new_fieldsets.append((name, {**options, 'fields': fields}))
+        return new_fieldsets
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if 'user_permissions' in form.base_fields:
+            del form.base_fields['user_permissions']
+        return form
+
 
 admin.site = MyAdminSite()
 
@@ -277,5 +328,6 @@ admin.site.register(Round, RoundAdmin)
 admin.site.register(Visit, VisitAdmin)
 admin.site.register(Point, PointAdmin)
 admin.site.register(Message, MessageAdmin)
-admin.site.register(User, UserAdmin)
+admin.site.register(User, CustomUserAdmin)
 admin.site.register(Group, GroupAdmin)
+register_food_admin(admin.site)

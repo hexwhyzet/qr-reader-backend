@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 class Dish(models.Model):
     CATEGORY_CHOICES = [
@@ -27,6 +28,9 @@ class OrderStatus(models.TextChoices):
     COMPLETED = 'Completed', 'Завершено'
 
 class Order(models.Model):
+    is_deleted = models.BooleanField(default=False, verbose_name='Удалён')
+    deletion_reason = models.TextField(null=True, blank=True, verbose_name='Причина удаления')
+    deleted_at = models.DateTimeField(null=True, blank=True, verbose_name='Время удаления')
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользователь')
     dish = models.ForeignKey(Dish, on_delete=models.CASCADE, verbose_name='Блюдо')
     cooking_time = models.DateField(verbose_name='Дата готовки блюда')
@@ -39,6 +43,12 @@ class Order(models.Model):
         verbose_name='Статус заказа'
     )
     
+    def delete(self, reason=None, *args, **kwargs):
+        self.is_deleted = True
+        self.deletion_reason = reason
+        self.deleted_at = timezone.now()
+        self.save()
+    
     class Meta:
         verbose_name = "Заказ"
         verbose_name_plural = "Заказы"
@@ -50,11 +60,14 @@ class Feedback(models.Model):
     dish = models.ForeignKey(Dish, on_delete=models.CASCADE, verbose_name='Блюдо')
     comment = models.TextField(verbose_name='Отзыв')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    is_read = models.BooleanField(default=False)
     
     class Meta:
         verbose_name = "Отзыв"
         verbose_name_plural = "Отзывы"
 
     def __str__(self):
-        return f"Feedback on {self.dish}"
+        if not self.is_read:
+            return f'[НЕ ПРОЧИТАНО] отзыв на {self.dish}'
+        return f"Отзыв на {self.dish}"
     

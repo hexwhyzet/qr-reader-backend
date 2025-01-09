@@ -17,11 +17,14 @@ class OrderSerializer(serializers.ModelSerializer):
         old_cooking_time = self.instance.cooking_time if self.instance else None
         
         tomorrow = timezone.now().date() + timezone.timedelta(days=1)
+        week_end = timezone.now().date() + timezone.timedelta(days=7)
 
         if old_cooking_time and old_cooking_time < tomorrow:
             raise serializers.ValidationError("Заказ нельзя редактировать менее чем за сутки до даты готовки.")
         if value < tomorrow:
             raise serializers.ValidationError("Дату готовки нельзя назначить ранее чем на завтрашний день.")
+        if value > week_end:
+            raise serializers.ValidationError("Заказ нельзя сделать раньше чем за неделю.")
         
         return value
     
