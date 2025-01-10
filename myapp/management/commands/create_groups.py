@@ -8,6 +8,7 @@ from myapp.custom_groups import (
     QRManager,
     QRGuard,
     UserManager,
+    SeniorUserManager,
     CanteenManager,
     CanteenEmployee,
     CanteenAdminManager
@@ -35,6 +36,9 @@ roles = {
         # no access to admin panel
     },
     UserManager: {
+        'user': ALL_PERMISSIONS,
+    },
+    SeniorUserManager: {
         'user': ALL_PERMISSIONS,
     },
     CanteenManager: {

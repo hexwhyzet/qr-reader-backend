@@ -22,7 +22,11 @@ class QRGuard(CustomGroup):
 class UserManager(CustomGroup):
     name = "user_manager"
     verbose_name = "User Manager"
-    
+
+class SeniorUserManager(CustomGroup):
+    name = "senior_user_manager"
+    verbose_name = "Senior User Manager"
+
 class CanteenManager(CustomGroup):
     name = "canteen_manager"
     verbose_name = "Canteen Manager"

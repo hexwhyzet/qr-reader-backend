@@ -14,8 +14,8 @@ def get_guard_by_guard_id(guard_id):
 
 
 def get_manager_guards(user):
-    if user.is_superuser or user.groups.filter(name='Senior Managers').exists():
+    if user.is_superuser or user.groups.filter(name='Senior Managers').exists() or user.groups.filter(name='senior_user_manager').exists():
         return Guard.objects.all()
-    elif user.groups.filter(name='Managers').exists():
+    elif user.groups.filter(name='Managers').exists() or user.groups.filter(name='qr_manager').exists():
         return Guard.objects.filter(managers=user)
     return []
