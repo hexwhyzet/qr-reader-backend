@@ -1,0 +1,31 @@
+{% extends 'admin/base_site.html' %}
+
+{% block content %}
+    <h1>Посчитать статистику по заказам</h1>
+    <form method="get" action="{% url 'admin:calc_order_statistics' %}">
+        <label for="date">Дата (YYYY-MM-DD):</label>
+        <input type="text" id="date" name="date" placeholder="Введите дату">
+        <button type="submit">Отправить</button>
+    </form>
+
+    {% if statistics %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Блюдо</th>
+                    <th>Количество заказов</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in statistics %}
+                <tr>
+                    <td>{{ item.dish }}</td>
+                    <td>{{ item.total_orders }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <a href="{% url 'admin:food_order_changelist' %}" class="button">Вернуться назад</a>
+{% endblock %}

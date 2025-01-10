@@ -4,7 +4,14 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 
-from myapp.custom_groups import QRManager, QRGuard, UserManager
+from myapp.custom_groups import (
+    QRManager,
+    QRGuard,
+    UserManager,
+    CanteenManager,
+    CanteenEmployee,
+    CanteenAdminManager
+)
 
 
 class PermissionType(str, Enum):
@@ -29,7 +36,22 @@ roles = {
     },
     UserManager: {
         'user': ALL_PERMISSIONS,
-    }
+    },
+    CanteenManager: {
+        'dish': [PermissionType.VIEW],
+        'order': [PermissionType.VIEW],
+        'feedback': [PermissionType.VIEW]
+    },
+    CanteenAdminManager: {
+        'dish': [PermissionType.VIEW],
+        'order': [PermissionType.VIEW],
+        'feedback': [PermissionType.VIEW]
+    },
+    CanteenEmployee: {
+        'dish': ALL_PERMISSIONS,
+        'order': [PermissionType.VIEW],
+        'feedback': [PermissionType.ADD]
+    },
 }
 
 
