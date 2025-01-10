@@ -3,3 +3,14 @@
 <!-- Шаблон для удаления sidebar с последними действиями -->
 {% block sidebar %}
 {% endblock %}
+
+{% block content %}
+    {% if unread_feedback_count > 0 %}
+    <a href="{% url 'admin:food_feedback_changelist' %}">
+        <p style="color: red;">
+         Непрочитанные отзывы ({{ unread_feedback_count }})
+        </p>
+    </a>
+    {% endif %}
+    {{ block.super }}
+{% endblock %}
