@@ -7,14 +7,13 @@ from django.contrib import admin
 from django.contrib.admin import AdminSite
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
 from django.contrib.auth.models import User, Group
-from django.contrib.auth.forms import UserChangeForm
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import path
 from django.urls import reverse
 from django.utils.html import format_html
 
-from myapp.custom_groups import QRManager, CanteenManager
+from myapp.custom_groups import QRManager, UserManager, SeniorUserManager
 from myapp.excel import fire_extinguishers, guards_stats
 from myapp.models import Guard, Round, Visit, Point, Message
 from myapp.services.guards import get_manager_guards, get_guard_by_guard_id
@@ -293,32 +292,56 @@ class MessageAdmin(CustomAdmin):
             return qs.filter(guard__managers=request.user)
         return qs
 
-class CustomUserChangeForm(UserChangeForm):
-    def get_fieldsets(self, request, obj=None):
-        fieldsets = super().get_fieldsets(request, obj)
-        new_fieldsets = []
-        for name, options in fieldsets:
-            fields = tuple(f for f in options.get('fields', []) if f != 'user_permissions')
-            new_fieldsets.append((name, {**options, 'fields': fields}))
-        return new_fieldsets
-    
-class CustomUserAdmin(UserAdmin):
-    form = CustomUserChangeForm
-    
-    def get_fieldsets(self, request, obj=None):
-        fieldsets = super().get_fieldsets(request, obj)
-        new_fieldsets = []
-        for name, options in fieldsets:
-            fields = options.get('fields', [])
-            fields = tuple(f for f in fields if f != 'user_permissions')
-            new_fieldsets.append((name, {**options, 'fields': fields}))
-        return new_fieldsets
 
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        if 'user_permissions' in form.base_fields:
-            del form.base_fields['user_permissions']
-        return form
+def is_user_manager(user):
+    return user.groups.filter(name=UserManager.name).exists() or user.groups.filter(
+        name=SeniorUserManager.name).exists()
+
+
+def is_senior_user_manager(user):
+    return user.groups.filter(name=SeniorUserManager.name).exists()
+
+
+class CustomUserAdmin(UserAdmin):
+    add_fieldsets = (
+        (
+            None,
+            {
+                'classes': ('wide',),
+                'fields': ('username', 'password1', 'password2', 'first_name', 'last_name', 'is_staff'),
+            },
+        ),
+    )
+
+    def get_fieldsets(self, request, obj=None):
+        if not obj:
+            return self.add_fieldsets
+
+        if not request.user.is_superuser:
+            return ((None, {'fields': ('username', 'first_name', 'last_name', 'is_staff', 'groups')}),)
+        return super().get_fieldsets(request, obj)
+
+    def get_readonly_fields(self, request, obj=None):
+        if not request.user.is_superuser and not is_senior_user_manager(request.user):
+            return 'is_superuser', 'user_permissions', 'groups'
+        return super().get_readonly_fields(request, obj)
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser or is_user_manager(request.user)
+
+    def has_change_permission(self, request, obj=None):
+        if not request.user.is_superuser and obj and obj.is_superuser and not is_user_manager(request.user):
+            return False
+        return super().has_change_permission(request, obj)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if not request.user.is_superuser:
+            return qs.filter(is_superuser=False)
+        return qs
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser or is_user_manager(request.user)
 
 
 admin.site = MyAdminSite()
