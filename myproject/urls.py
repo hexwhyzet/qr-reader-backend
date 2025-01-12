@@ -20,10 +20,12 @@ from django.urls import path, include, re_path
 from django.views.static import serve
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from myproject.settings import DEBUG
+
 static_urlpatterns = [
     re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
     re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATICFILES_DIRS[0]}),
-]
+] if DEBUG else []
 urlpatterns = [
     # path('admin/', admin_site.urls),
     path('admin/', admin.site.urls),
@@ -31,5 +33,5 @@ urlpatterns = [
     path('api/food/', include('food.urls')),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path("", include(static_urlpatterns)),
+    path('', include(static_urlpatterns)),
 ]

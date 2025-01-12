@@ -1,12 +1,28 @@
 version: '3.8'
 
 services:
-  web:
+  django:
     build: .
-    command: gunicorn --bind 0.0.0.0:8000 myproject.wsgi
+    command: gunicorn myproject.wsgi -c gunicorn.conf.py
+    volumes:
+      - .:/app
+      - static_volume:/app/static
+      - media_volume:/app/media
+    env_file:
+      - .env
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
-    env_file:
-      - .env
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - static_volume:/static
+      - media_volume:/media
+    depends_on:
+      - django
+
+volumes:
+  static_volume:
+  media_volume:

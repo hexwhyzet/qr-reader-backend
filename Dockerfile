@@ -11,6 +11,6 @@ COPY . .
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-EXPOSE 8000
+EXPOSE 8080
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "myproject.wsgi"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "myproject.wsgi"]

@@ -25,7 +25,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['10.0.2.2', 'localhost', '127.0.0.1', os.getenv('HOST')]
+ALLOWED_HOSTS = ['10.0.2.2', 'localhost', '127.0.0.1', os.getenv('HOST'), 'localhost:8000']
 
 if DEBUG:
     ALLOWED_HOSTS = ['*']
@@ -35,7 +35,7 @@ if DEBUG:
 INSTALLED_APPS = [
     'admin_interface',
     'colorfield',
-    
+
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'myapp',
     'food',
-    
+
     'django.contrib.admin',
 ]
 
@@ -122,8 +122,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-# STATIC_URL = 'static/'
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
@@ -132,8 +130,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
-# if DEBUG:
-#     STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static/'),
 )
@@ -157,3 +154,8 @@ SIMPLE_JWT = {  # Числа дефолтные, за ними нет смысл
     'SLIDING_TOKEN_REFRESH_LIFETIME_LATE_USER': timedelta(days=1),
     'SLIDING_TOKEN_LIFETIME_LATE_USER': timedelta(days=30),
 }
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    f'http://{os.getenv("HOST")}:8000',
+]
