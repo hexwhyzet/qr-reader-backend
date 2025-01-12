@@ -13,4 +13,4 @@ ENV PYTHONUNBUFFERED 1
 
 EXPOSE 8080
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "myproject.wsgi"]
+CMD ["gunicorn", "myproject.wsgi", "-c", "gunicorn.conf.py"]
