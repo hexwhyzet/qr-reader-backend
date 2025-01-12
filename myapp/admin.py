@@ -13,7 +13,7 @@ from django.urls import path
 from django.urls import reverse
 from django.utils.html import format_html
 
-from myapp.custom_groups import QRManager, UserManager, SeniorUserManager
+from myapp.custom_groups import QRManager, UserManager, SeniorUserManager, CanteenManager
 from myapp.excel import fire_extinguishers, guards_stats
 from myapp.models import Guard, Round, Visit, Point, Message
 from myapp.services.guards import get_manager_guards, get_guard_by_guard_id

@@ -159,3 +159,5 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
     f'http://{os.getenv("HOST")}:8000',
 ]
+
+USE_X_FORWARDED_HOST = True
