@@ -13,7 +13,7 @@ from django.urls import path
 from django.urls import reverse
 from django.utils.html import format_html
 
-from myapp.custom_groups import QRManager, UserManager, SeniorUserManager, CanteenManager
+from myapp.custom_groups import QRManager, UserManager, SeniorUserManager, CanteenAdminManager
 from myapp.excel import fire_extinguishers, guards_stats
 from myapp.models import Guard, Round, Visit, Point, Message
 from myapp.services.guards import get_manager_guards, get_guard_by_guard_id
@@ -150,7 +150,7 @@ class MyAdminSite(AdminSite):
             return result
         
         if app_name == ServicesEnum.CANTEEN:
-            if request.user.is_superuser or request.user.groups.filter(name=CanteenManager.name).exists():
+            if request.user.is_superuser or request.user.groups.filter(name=CanteenAdminManager.name).exists():
                 return [{
                     'label': 'Добавить сотрудников в сервис',
                     'url': self.get_absolute_url(request, 'manage_group_users/canteen_employee'),
