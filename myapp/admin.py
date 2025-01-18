@@ -79,13 +79,13 @@ class MyAdminSite(AdminSite):
         if admin_class is None:
             admin_class = CustomAdmin
         super().register(model_or_iterable, admin_class, **options)
-        
+
     def app_index(self, request, app_label, extra_context=None):
         extra_context = extra_context or {}
         if app_label == 'food':
             extra_context['unread_feedback_count'] = Feedback.objects.filter(is_read=False).count()
         return super().app_index(request, app_label, extra_context)
-    
+
     def get_absolute_url(self, request, view_name, *args, **kwargs):
         return os.path.join(f'http://{request.get_host()}', 'admin', view_name)
 
@@ -142,13 +142,8 @@ class MyAdminSite(AdminSite):
                     'url': self.get_absolute_url(request, 'export-guards-stats/'),
                 }
             ]
-            if request.user.is_superuser or request.user.groups.filter(name=QRManager.name).exists():
-                result.append({
-                    'label': 'Добавить сотрудников в сервис',
-                    'url': self.get_absolute_url(request, 'manage_group_users/qr_guard'),
-                })
             return result
-        
+
         if app_name == ServicesEnum.CANTEEN:
             if request.user.is_superuser or request.user.groups.filter(name=CanteenAdminManager.name).exists():
                 return [{
@@ -178,41 +173,85 @@ class VisitInline(admin.StackedInline):
 
 
 class GuardAdmin(CustomAdmin):
+    exclude = ['name_old']
+    actions = ['manager_delete']
+
+    def has_super_permission(self, request):
+        return request.user.is_superuser or request.user.groups.filter(
+            name='Senior Managers').exists() or request.user.groups.filter(name='senior_user_manager').exists()
+
+    def has_manager_permission(self, request):
+        return request.user.groups.filter(name='Managers').exists() or request.user.groups.filter(
+            name='qr_manager').exists()
+
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        if request.user.is_superuser or request.user.groups.filter(name='Senior Managers').exists() or request.user.groups.filter(name='senior_user_manager').exists():
+        if self.has_super_permission(request):
             return qs
-        elif request.user.groups.filter(name='Managers').exists() or request.user.groups.filter(name='qr_manager').exists():
+        elif self.has_manager_permission(request):
             return qs.filter(managers=request.user)
         return []
 
     def has_change_permission(self, request, obj=None):
         if not super().has_change_permission(request, obj):
             return False
-        if request.user.is_superuser or request.user.groups.filter(name='Senior Managers').exists() or request.user.groups.filter(name='senior_user_manager').exists():
+        if self.has_super_permission(request):
             return True
-        if obj and (request.user.groups.filter(name='Managers').exists() or request.user.groups.filter(name='qr_manager').exists()):
-            return request.user in obj.managers.all()
         return False
 
     def has_delete_permission(self, request, obj=None):
         if not super().has_delete_permission(request, obj):
             return False
-        if request.user.is_superuser or request.user.groups.filter(name='Senior Managers').exists() or request.user.groups.filter(name='senior_user_manager').exists():
+        if self.has_super_permission(request):
             return True
-        if obj and (request.user.groups.filter(name='Managers').exists() or request.user.groups.filter(name='qr_manager').exists()):
-            return request.user in obj.managers.all()
         return False
 
+    def manager_delete(self, request, queryset):
+        for item in queryset:
+            item.managers.remove(request.user)
+            self.update_qr_guard_group(item)
+
+    manager_delete.short_description = "Отвязать сотрудника от себя"
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+
+        if self.has_delete_permission(request):
+            del actions['manager_delete']
+
+        return actions
+
+    def update_qr_guard_group(self, obj):
+        if not obj.managers.all().exists():
+            if obj.user:
+                group = get_object_or_404(Group, name='qr_guard')
+                group.user_set.remove(obj.user)
+        else:
+            if obj.user:
+                group = get_object_or_404(Group, name='qr_guard')
+                group.user_set.add(obj.user)
+
     def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)
-        if not change or not obj.managers:
-            obj.managers.add(request.user)
+        if Guard.objects.filter(user=obj.user).exists():
+            guard = Guard.objects.get(user=obj.user)
+            if not self.has_super_permission(request):
+                guard.managers.add(request.user)
+            else:
+                for item in form.cleaned_data['managers']:
+                    guard.managers.add(item)
+            guard.save()
+            obj.id = guard.id # самое легкое решение, чтобы перенаправить на уже существующий объект после создания
+        else:
+            super().save_model(request, obj, form, change)
+
+        self.update_qr_guard_group(obj)
 
     def get_readonly_fields(self, request, obj=None):
-        if request.user.groups.filter(name='Managers').exists() or request.user.groups.filter(name='qr_manager').exists():
-            return ['managers']
-        return []
+        if self.has_super_permission(request):
+            if obj is not None:
+                return ['user']
+            return []
+        return ['managers']
 
 
 class RoundAdmin(CustomAdmin):
@@ -225,9 +264,11 @@ class RoundAdmin(CustomAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        if request.user.is_superuser or request.user.groups.filter(name='Senior Managers').exists() or request.user.groups.filter(name='senior_user_manager').exists():
+        if request.user.is_superuser or request.user.groups.filter(
+                name='Senior Managers').exists() or request.user.groups.filter(name='senior_user_manager').exists():
             return qs
-        if request.user.groups.filter(name='Managers').exists() or request.user.groups.filter(name='qr_manager').exists():
+        if request.user.groups.filter(name='Managers').exists() or request.user.groups.filter(
+                name='qr_manager').exists():
             return qs.filter(guard__managers=request.user)
         return []
 
@@ -241,9 +282,11 @@ class VisitAdmin(CustomAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        if request.user.is_superuser or request.user.groups.filter(name='Senior Managers').exists() or request.user.groups.filter(name='senior_user_manager').exists():
+        if request.user.is_superuser or request.user.groups.filter(
+                name='Senior Managers').exists() or request.user.groups.filter(name='senior_user_manager').exists():
             return qs
-        if request.user.groups.filter(name='Managers').exists() or request.user.groups.filter(name='qr_manager').exists():
+        if request.user.groups.filter(name='Managers').exists() or request.user.groups.filter(
+                name='qr_manager').exists():
             return qs.filter(round__guard__managers=request.user)
         return []
 
@@ -298,9 +341,11 @@ class MessageAdmin(CustomAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        if request.user.is_superuser or request.user.groups.filter(name='Senior Managers').exists() or request.user.groups.filter(name='senior_user_manager').exists():
+        if request.user.is_superuser or request.user.groups.filter(
+                name='Senior Managers').exists() or request.user.groups.filter(name='senior_user_manager').exists():
             return qs
-        if request.user.groups.filter(name='Managers').exists() or request.user.groups.filter(name='qr_manager').exists():
+        if request.user.groups.filter(name='Managers').exists() or request.user.groups.filter(
+                name='qr_manager').exists():
             return qs.filter(guard__managers=request.user)
         return []
 

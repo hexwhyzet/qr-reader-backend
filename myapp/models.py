@@ -23,15 +23,30 @@ def pretty_datetime(dt):
     return f"{dt.astimezone(getTimezone()).date()} {dt.astimezone(getTimezone()).replace(microsecond=0).time()}"
 
 
+class VerboseUserDisplay(User):
+    class Meta:
+        proxy = True
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} ({self.username})"
+
+
 class Guard(models.Model):
-    name = models.CharField(max_length=100, verbose_name='Имя')
+    name_old = models.CharField(max_length=100, verbose_name='Имя', null=True, blank=True)
     code = models.CharField(max_length=6, unique=True, default=generate_six_digit_code, editable=False,
                             verbose_name='Код сотрудника')
 
     managers = models.ManyToManyField(User, limit_choices_to={'groups__name': 'Managers'}, default=None,
                                       related_name='guards', verbose_name='Менеджеры', blank=False)
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='guard_profile', default=None, null=True)
+    user = models.ForeignKey(VerboseUserDisplay, on_delete=models.CASCADE, related_name='guard_profile',
+                             verbose_name='Аккаунт сотрудника', default=None, null=True, blank=False)
+
+    @property
+    def name(self):
+        if not self.user:
+            return f"{self.name_old} (Привяжите пользователя)"
+        return f"{self.user.first_name} {self.user.last_name}"
 
     def __str__(self):
         return f"{self.name} ({self.code})"

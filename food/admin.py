@@ -1,10 +1,11 @@
 from food.models import Dish, Order, Feedback
-from myapp.admin import CustomAdmin
 from django.urls import path
 from django.shortcuts import render
 from food.models import Order
 from django.utils import timezone
 from food.services.order_statistics import OrderService
+from myapp.admin_mixins import CustomAdmin
+
 
 class FeedbackModelAdmin(CustomAdmin):
     readonly_fields = ('is_read',)
