@@ -7,4 +7,9 @@
             <a href="{% url 'admin:calc_order_statistics_form' %}" class="button">Посчитать статистику по заказам</a>
         </li>
     {% endif %}
+    {% if show_weekly_view_button %}
+        <li>
+            <a href="{% url 'admin:weekly-view' %}" class="button">Просмотр по неделям</a>
+        </li>
+    {% endif %}
 {% endblock %}

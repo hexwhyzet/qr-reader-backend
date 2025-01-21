@@ -1,11 +1,16 @@
 from rest_framework import serializers, fields
-from food.models import Dish, Order, Feedback
+from food.models import Dish, Order, Feedback, AllowedDish
 from django.utils import timezone
 
 
 class DishSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dish
+        fields = '__all__'
+        
+class AllowedDishSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AllowedDish
         fields = '__all__'
 
 
@@ -30,10 +35,18 @@ class OrderSerializer(serializers.ModelSerializer):
     
     def validate(self, data):
         cooking_time = data.get('cooking_time', None)
+        dish = data.get('dish', None)
 
         if cooking_time:
             self.validate_cooking_time(cooking_time)
-        
+
+            if dish:
+                allowed_dishes = AllowedDish.objects.filter(dish=dish, date=cooking_time)
+                if not allowed_dishes.exists():
+                    raise serializers.ValidationError(
+                        f"Блюдо '{dish.name}' недоступно для заказа на {cooking_time}."
+                    )
+
         return data
 
     class Meta:

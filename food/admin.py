@@ -1,10 +1,11 @@
-from food.models import Dish, Order, Feedback
+from food.models import Dish, Order, Feedback, AllowedDish
 from django.urls import path
 from django.shortcuts import render
 from food.models import Order
 from django.utils import timezone
 from food.services.order_statistics import OrderService
 from myapp.admin_mixins import CustomAdmin
+from datetime import timedelta
 
 
 class FeedbackModelAdmin(CustomAdmin):
@@ -72,8 +73,56 @@ class OrderAdmin(CustomAdmin):
             path('order-statistics-result/', self.admin_site.admin_view(self.calc_statistics), name='calc_order_statistics'),
         ]
         return custom_urls + urls
+    
+class AllowedDishAdmin(CustomAdmin):
+    list_display = ('dish', 'date')
+    list_filter = ('date',)
+    change_list_template = 'admin/order/change_list.html'
+    
+    def changelist_view(self, request, extra_context=None):
+        """
+        Переопределяем метод changelist_view, чтобы добавить кнопку на страницу списка заказов.
+        """
+        extra_context = extra_context or {}
+        extra_context['show_weekly_view_button'] = True
+        return super().changelist_view(request, extra_context=extra_context)
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('weekly-view/', self.admin_site.admin_view(self.weekly_view), name='weekly-view'),
+        ]
+        return custom_urls + urls
+
+    def weekly_view(self, request):
+        """
+        Представление для отображения блюд на 7 дней начиная с выбранной даты.
+        """
+        selected_date = request.GET.get('date')
+        if selected_date:
+            base_date = timezone.datetime.strptime(selected_date, '%Y-%m-%d').date()
+        else:
+            base_date = timezone.now().date()
+
+        # Генерация списка дней недели
+        days = [(base_date + timedelta(days=i)) for i in range(7)]
+
+        # Получение блюд для каждого дня
+        dishes_by_date = [
+            {
+                'day': day,
+                'dishes': AllowedDish.objects.filter(date=day),
+            }
+            for day in days
+        ]
+
+        context = {
+            'dishes_by_date': dishes_by_date,
+        }
+        return render(request, 'admin/weekly_view.html', context)
 
 def register_food_admin(site):
     site.register(Dish)
     site.register(Order, OrderAdmin)
     site.register(Feedback, FeedbackModelAdmin)
+    site.register(AllowedDish, AllowedDishAdmin)

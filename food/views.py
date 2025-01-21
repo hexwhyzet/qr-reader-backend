@@ -3,8 +3,8 @@ from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
-from food.models import Dish, Order, Feedback
-from food.serializers import DishSerializer, OrderSerializer, FeedbackSerializer
+from food.models import Dish, Order, Feedback, AllowedDish
+from food.serializers import DishSerializer, OrderSerializer, FeedbackSerializer, AllowedDishSerializer
 from food.permissions import CanAccessOrder, CanAccessOrderStats
 from food.services.order_statistics import OrderService
 
@@ -13,6 +13,14 @@ class DishViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Dish.objects.all()
     serializer_class = DishSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    
+class AllowedDishViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = AllowedDishSerializer
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    
+    def get_queryset(self):
+        today = timezone.now().date()
+        return AllowedDish.objects.filter(date__gte=today)
 
 
 class OrderViewSet(viewsets.ModelViewSet):
@@ -20,7 +28,8 @@ class OrderViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, DjangoModelPermissions, CanAccessOrder]
     
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user, is_deleted=False)
+        today = timezone.now().date()
+        return Order.objects.filter(user=self.request.user, is_deleted=False, cooking_time__gte=today)
     
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()

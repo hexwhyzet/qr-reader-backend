@@ -21,6 +21,18 @@ class Dish(models.Model):
     def __str__(self):
         return self.name
     
+class AllowedDish(models.Model):
+    dish = models.ForeignKey(Dish, on_delete=models.CASCADE, verbose_name='Блюдо')
+    date = models.DateField(verbose_name='Дата')
+
+    class Meta:
+        verbose_name = "Разрешённое блюдо"
+        verbose_name_plural = "Разрешённые блюда"
+        unique_together = ('dish', 'date')
+
+    def __str__(self):
+        return f"{self.dish.name} ({self.date})"
+    
 class OrderStatus(models.TextChoices):
     PENDING = 'Pending', 'Ожидает'
     APPROVED = 'Approved', 'Подтверждено'
