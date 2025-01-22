@@ -43,16 +43,19 @@ roles = {
     },
     CanteenManager: {
         'dish': [PermissionType.VIEW],
+        'alloweddish': [PermissionType.VIEW],
         'order': [PermissionType.VIEW],
         'feedback': [PermissionType.VIEW]
     },
     CanteenAdminManager: {
-        'dish': [PermissionType.VIEW],
+        'dish': ALL_PERMISSIONS,
+        'alloweddish': ALL_PERMISSIONS,
         'order': [PermissionType.VIEW],
         'feedback': [PermissionType.VIEW]
     },
     CanteenEmployee: {
-        'dish': ALL_PERMISSIONS,
+        'dish': [PermissionType.VIEW],
+        'alloweddish': [PermissionType.VIEW],
         'order': [PermissionType.VIEW],
         'feedback': [PermissionType.ADD]
     },
@@ -65,6 +68,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         for custom_group in roles.keys():
             group, _ = Group.objects.get_or_create(name=custom_group.name)
+            
+            group.permissions.clear()
 
             for model_name in roles[custom_group].keys():
                 content_type = ContentType.objects.get(model=model_name)
