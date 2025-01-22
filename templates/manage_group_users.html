@@ -1,27 +1,37 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Управление пользователями в группе {{ group.name }}</title>
-</head>
-<body>
+{% extends "admin/base_site.html" %}
+
+{% block content %}
     <h1>Управление пользователями в группе {{ group.name }}</h1>
     {% if users_in_group %}
-        <ul>
-            {% for user in users_in_group %}
-                <li>{{ user.username }}</li>
-                <form method="post" action="{% url 'admin:manage_group_users_delete' group.name user.id %}" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit" style="color:red;">Удалить</button>
-                </form>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>В группе нет пользователей.</p>
-    {% endif %}
+            <div class="module">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Пользователь</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users_in_group %}
+                            <tr class="row1">
+                                <td>{{ user.username }}</td>
+                                <td>
+                                    <form method="post" action="{% url 'admin:manage_group_users_delete' group.name user.id %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <input type="submit" value="Удалить" style="padding: 5px">
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <h2 style="margin: 25px 0">В группе {{ group.name }} нет пользователей.</h2>
+        {% endif %}
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Добавить пользователя в группу</button>
+        <input type="submit" value="Добавить пользователя в группу" style="padding: 10px">
     </form>
-</body>
-</html>
+{% endblock %}

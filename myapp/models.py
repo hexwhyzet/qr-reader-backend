@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.db import models
+from django.db.models import Q
 
 from myproject import settings
 
@@ -36,7 +37,7 @@ class Guard(models.Model):
     code = models.CharField(max_length=6, unique=True, default=generate_six_digit_code, editable=False,
                             verbose_name='Код сотрудника')
 
-    managers = models.ManyToManyField(User, limit_choices_to={'groups__name': 'Managers'}, default=None,
+    managers = models.ManyToManyField(User, limit_choices_to=Q(groups__name='Managers') | Q(groups__name='qr_manager'), default=None,
                                       related_name='guards', verbose_name='Менеджеры', blank=False)
 
     user = models.ForeignKey(VerboseUserDisplay, on_delete=models.CASCADE, related_name='guard_profile',
