@@ -26,8 +26,8 @@ class AllowedDish(models.Model):
     date = models.DateField(verbose_name='Дата')
 
     class Meta:
-        verbose_name = "Разрешённое блюдо"
-        verbose_name_plural = "Разрешённые блюда"
+        verbose_name = "Меню"
+        verbose_name_plural = "Меню"
         unique_together = ('dish', 'date')
 
     def __str__(self):
