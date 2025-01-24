@@ -6,6 +6,7 @@ from django.utils import timezone
 from food.services.order_statistics import OrderService
 from myapp.admin_mixins import CustomAdmin
 from datetime import timedelta
+from django import forms
 
 
 class FeedbackModelAdmin(CustomAdmin):
@@ -74,10 +75,45 @@ class OrderAdmin(CustomAdmin):
         ]
         return custom_urls + urls
     
+class AllowedDishForm(forms.ModelForm):
+    dishes = forms.ModelMultipleChoiceField(
+        queryset=Dish.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        label="Блюда",
+    )
+    date = forms.DateField(widget=forms.SelectDateWidget, label="Дата")
+
+    class Meta:
+        model = AllowedDish
+        fields = ['date', 'dishes']
+
+    def save(self, commit=True):
+        date = self.cleaned_data['date']
+        dishes = self.cleaned_data['dishes']
+        instances = []
+        for dish in dishes:
+            instance = AllowedDish(dish=dish, date=date)
+            if commit:
+                instance = instance.save()
+            instances.append(instance)
+        return instances[0]
+    
+    def save_m2m(self):
+        pass
+    
+
 class AllowedDishAdmin(CustomAdmin):
     list_display = ('dish', 'date')
     list_filter = ('date',)
     change_list_template = 'admin/order/change_list.html'
+    
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        if change == True or obj:
+            return super().get_form(request, obj, **kwargs)
+        return AllowedDishForm
+    
+    def save_model(self, request, obj, form, change):
+        form.save(commit=True)
     
     def changelist_view(self, request, extra_context=None):
         """
@@ -86,13 +122,35 @@ class AllowedDishAdmin(CustomAdmin):
         extra_context = extra_context or {}
         extra_context['show_weekly_view_button'] = True
         return super().changelist_view(request, extra_context=extra_context)
+    
+    def changelist_view(self, request, extra_context=None):
+        """
+        Представление для отображения блюд на 7 дней начиная с выбранной даты.
+        """
+        extra_context = extra_context or {}
+        extra_context['show_weekly_statistics'] = True
+        
+        
+        selected_date = request.GET.get('date')
+        if selected_date:
+            base_date = timezone.datetime.strptime(selected_date, '%Y-%m-%d').date()
+        else:
+            base_date = timezone.now().date()
 
-    def get_urls(self):
-        urls = super().get_urls()
-        custom_urls = [
-            path('weekly-view/', self.admin_site.admin_view(self.weekly_view), name='weekly-view'),
+        days = [(base_date + timedelta(days=i)) for i in range(7)]
+
+        dishes_by_date = [
+            {
+                'day': day,
+                'dishes': AllowedDish.objects.filter(date=day),
+            }
+            for day in days
         ]
-        return custom_urls + urls
+
+        extra_context['dishes_by_date'] = dishes_by_date
+        
+        return super().changelist_view(request, extra_context=extra_context)
+
 
     def weekly_view(self, request):
         """
