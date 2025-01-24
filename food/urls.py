@@ -6,7 +6,7 @@ router = DefaultRouter()
 router.register('dishes', DishViewSet)
 router.register('orders', OrderViewSet, basename='Заказы')
 router.register('feedback', FeedbackViewSet)
-router.register('allowed_dishes', AllowedDishViewSet, basename='Разрешённые блюда')
+router.register('allowed_dishes', AllowedDishViewSet, basename='Меню')
 
 urlpatterns = [
     path('', include(router.urls)),
