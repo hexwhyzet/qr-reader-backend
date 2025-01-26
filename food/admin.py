@@ -1,11 +1,13 @@
 from food.models import Dish, Order, Feedback, AllowedDish
-from django.urls import path
-from django.shortcuts import render
+from django.urls import path, reverse
+from django.shortcuts import render, redirect
 from food.models import Order
 from django.utils import timezone
 from food.services.order_statistics import OrderService
 from myapp.admin_mixins import CustomAdmin
 from datetime import timedelta
+from django import forms
+from django.db import IntegrityError
 
 
 class FeedbackModelAdmin(CustomAdmin):
@@ -74,40 +76,75 @@ class OrderAdmin(CustomAdmin):
         ]
         return custom_urls + urls
     
+class AllowedDishForm(forms.Form):
+    dishes = forms.ModelMultipleChoiceField(
+        queryset=Dish.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        label="Блюда",
+        required=False,
+    )
+    
+    def __init__(self, *args, **kwargs):
+        self.date = kwargs.pop('date', None)
+        super().__init__(*args, **kwargs)
+
+        if self.date:
+            existing_dishes = AllowedDish.objects.filter(date=self.date).values_list('dish_id', flat=True)
+            self.fields['dishes'].initial = existing_dishes
+
+    def save(self, commit=True):
+        date = self.date
+        selected_dishes = self.cleaned_data['dishes']
+        existing_dishes = AllowedDish.objects.filter(date=date)
+
+        
+        existing_dish_ids = set(existing_dishes.values_list('dish_id', flat=True))
+        selected_dish_ids = set(selected_dishes.values_list('id', flat=True))
+
+        # Определяем блюда для добавления и удаления
+        to_add = selected_dish_ids - existing_dish_ids
+        to_remove = existing_dish_ids - selected_dish_ids
+
+        
+        for dish_id in to_add:
+            try:
+                if commit:
+                    AllowedDish.objects.create(dish_id=dish_id, date=date)
+            except IntegrityError:
+                pass
+        if commit:
+            AllowedDish.objects.filter(dish_id__in=to_remove, date=date).delete()
+    
+
 class AllowedDishAdmin(CustomAdmin):
     list_display = ('dish', 'date')
     list_filter = ('date',)
     change_list_template = 'admin/order/change_list.html'
     
-    def changelist_view(self, request, extra_context=None):
-        """
-        Переопределяем метод changelist_view, чтобы добавить кнопку на страницу списка заказов.
-        """
-        extra_context = extra_context or {}
-        extra_context['show_weekly_view_button'] = True
-        return super().changelist_view(request, extra_context=extra_context)
-
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
-            path('weekly-view/', self.admin_site.admin_view(self.weekly_view), name='weekly-view'),
+            path('add_menu/', self.admin_site.admin_view(self.batch_add_menu), name='add_menu'),
         ]
         return custom_urls + urls
-
-    def weekly_view(self, request):
+    
+    def changelist_view(self, request, extra_context=None):
         """
         Представление для отображения блюд на 7 дней начиная с выбранной даты.
         """
+        extra_context = extra_context or {}
+        extra_context['show_weekly_statistics'] = True
+        extra_context['show_weekly_view_button'] = True
+        
+        
         selected_date = request.GET.get('date')
         if selected_date:
             base_date = timezone.datetime.strptime(selected_date, '%Y-%m-%d').date()
         else:
             base_date = timezone.now().date()
 
-        # Генерация списка дней недели
         days = [(base_date + timedelta(days=i)) for i in range(7)]
 
-        # Получение блюд для каждого дня
         dishes_by_date = [
             {
                 'day': day,
@@ -116,10 +153,33 @@ class AllowedDishAdmin(CustomAdmin):
             for day in days
         ]
 
+        extra_context['dishes_by_date'] = dishes_by_date
+        
+        return super().changelist_view(request, extra_context=extra_context)
+    
+    
+    def batch_add_menu(self, request):
+        selected_date = request.GET.get('date')
+        if selected_date:
+            base_date = timezone.datetime.strptime(selected_date, '%Y-%m-%d').date()
+        else:
+            base_date = timezone.now().date()
+        
+        if request.method == 'POST':
+            form = AllowedDishForm(request.POST, date=base_date)
+            if form.is_valid():
+                form.save()
+                admin_url = reverse('admin:food_alloweddish_changelist')
+                return redirect(admin_url)
+        else:
+            form = AllowedDishForm(date=base_date)
+        
         context = {
-            'dishes_by_date': dishes_by_date,
+            'date': base_date,
+            'form': form
         }
-        return render(request, 'admin/weekly_view.html', context)
+        return render(request, 'admin/add_menu.html', context)
+
 
 def register_food_admin(site):
     site.register(Dish)

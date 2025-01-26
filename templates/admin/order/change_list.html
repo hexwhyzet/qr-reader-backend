@@ -7,9 +7,48 @@
             <a href="{% url 'admin:calc_order_statistics_form' %}" class="button">Посчитать статистику по заказам</a>
         </li>
     {% endif %}
-    {% if show_weekly_view_button %}
-        <li>
-            <a href="{% url 'admin:weekly-view' %}" class="button">Просмотр по неделям</a>
-        </li>
+{% endblock %}
+
+{% block content %}
+{% if show_weekly_statistics %}
+    <h1>Доступные блюда по дням недели</h1>
+    <form method="get">
+        <label for="date">Выберите дату:</label>
+        <input type="date" id="date" name="date" value="{{ days.0 }}">
+        <button type="submit">Показать</button>
+    </form>
+
+    <table border="1">
+        <thead>
+            <tr>
+                {% for day_data in dishes_by_date %}
+                <th>
+                    {{ day_data.day }}<br>
+                    {{ day_data.day|date:"l" }}
+                </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                {% for day_data in dishes_by_date %}
+                <td>
+                    {% for allowed_dish in day_data.dishes %}
+                        <a href="/admin/food/alloweddish/{{ allowed_dish.id }}/change/">
+                            {{ allowed_dish.dish.name }}
+                        </a><br>
+                    {% empty %}
+                        Нет доступных блюд<br>
+                    {% endfor %}
+                    <br>
+                    <a href="{% url 'admin:add_menu' %}?date={{ day_data.day|date:'Y-m-d' }}" class="button">+</a>
+                </td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+    {% else %}
+        {{ block.super }}
     {% endif %}
+
 {% endblock %}
