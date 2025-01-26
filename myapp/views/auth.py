@@ -13,8 +13,8 @@ class UserInfo(APIView):
     def get(self, request):
         user = request.user
         extra = {}
-        if hasattr(user, 'guard_profile'):
-            extra['guard_id'] = user.guard_profile.code
+        if user.guard_profile.exists():
+            extra['guard_id'] = user.guard_profile.first().code
         content = {
             'id': user.id,
             'username': user.username,
