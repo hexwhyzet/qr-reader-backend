@@ -74,12 +74,17 @@ class Command(BaseCommand):
             for model_name in roles[custom_group].keys():
                 content_type = ContentType.objects.get(model=model_name)
 
-                for permission in roles[custom_group][model_name]:
+                for permission in ALL_PERMISSIONS:
                     codename = f'{permission.value}_{model_name}'
 
                     p = Permission.objects.get(codename=codename, content_type=content_type)
-                    group.permissions.add(p)
-
-                    self.stdout.write(f'Permission "{codename}" added to group "{custom_group.name}"')
+                    if permission in roles[custom_group][model_name]:
+                        if not group.permissions.filter(codename=p.codename).exists():
+                            group.permissions.add(p)
+                            self.stdout.write(f'Permission "{codename}" added to group "{custom_group.name}"')
+                    else:
+                        if group.permissions.filter(codename=p.codename).exists():
+                            group.permissions.remove(p)
+                            self.stdout.write(f'Permission "{codename}" removed from group "{custom_group.name}"')
 
             self.stdout.write(f'Permissions added to group "{custom_group.name}"')
