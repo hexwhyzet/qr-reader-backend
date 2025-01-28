@@ -248,7 +248,7 @@ class GuardAdmin(CustomAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if self.has_super_permission(request):
-            if obj is not None:
+            if obj is not None and not request.user.is_superuser:
                 return ['user']
             return []
         return ['managers']
