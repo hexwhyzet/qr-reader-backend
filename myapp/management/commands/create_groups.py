@@ -56,8 +56,8 @@ roles = {
     CanteenEmployee: {
         'dish': [PermissionType.VIEW],
         'alloweddish': [PermissionType.VIEW],
-        'order': [PermissionType.VIEW],
-        'feedback': [PermissionType.ADD]
+        'order': ALL_PERMISSIONS,
+        'feedback': [PermissionType.VIEW, PermissionType.ADD]
     },
     DispatchAdminManager: {
 
