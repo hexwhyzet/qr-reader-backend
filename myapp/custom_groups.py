@@ -38,3 +38,7 @@ class CanteenAdminManager(CustomGroup):
 class CanteenEmployee(CustomGroup):
     name = "canteen_employee"
     verbose_name = "Canteen Employee"
+
+class DispatchAdminManager(CustomGroup):
+    name = "dispatch_admin_manager"
+    verbose_name = "Dispatch Admin"

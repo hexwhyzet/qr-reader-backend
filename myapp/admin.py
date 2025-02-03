@@ -13,14 +13,15 @@ from django.urls import path
 from django.urls import reverse
 from django.utils.html import format_html
 
-from myapp.custom_groups import QRManager, UserManager, SeniorUserManager, CanteenAdminManager
+from dispatch.admin import register_dispatch_admin
+from food.admin import register_food_admin
+from food.models import Feedback
+from myapp.admin_mixins import CustomAdmin
+from myapp.custom_groups import UserManager, SeniorUserManager, CanteenAdminManager
 from myapp.excel import fire_extinguishers, guards_stats
 from myapp.models import Guard, Round, Visit, Point, Message
 from myapp.services.guards import get_manager_guards, get_guard_by_guard_id
 from myapp.services.messages import messages_by_user
-from myapp.admin_mixins import CustomAdmin
-from food.admin import register_food_admin
-from food.models import Feedback
 
 
 class ServicesEnum(enum.StrEnum):
@@ -43,7 +44,6 @@ class GuardsStatsForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
-        print(self.request)
         super().__init__(*args, **kwargs)
         guards_choices = [(self.ALL_EMPLOYEES_OPTION, "Все сотрудники")] + [
             (employee.id, employee.name) for employee in get_manager_guards(self.request.user)
@@ -240,7 +240,7 @@ class GuardAdmin(CustomAdmin):
                 for item in form.cleaned_data['managers']:
                     guard.managers.add(item)
             guard.save()
-            obj.id = guard.id # самое легкое решение, чтобы перенаправить на уже существующий объект после создания
+            obj.id = guard.id  # самое легкое решение, чтобы перенаправить на уже существующий объект после создания
         else:
             super().save_model(request, obj, form, change)
 
@@ -359,6 +359,10 @@ def is_senior_user_manager(user):
     return user.groups.filter(name=SeniorUserManager.name).exists()
 
 
+def user_has_group(user, group):
+    return user.groups.filter(name=group.name).exists()
+
+
 class CustomUserAdmin(UserAdmin):
     add_fieldsets = (
         (
@@ -411,3 +415,4 @@ admin.site.register(Message, MessageAdmin)
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(Group, GroupAdmin)
 register_food_admin(admin.site)
+register_dispatch_admin(admin.site)

@@ -1,0 +1,11 @@
+{% extends 'admin/base_site.html' %}
+{% block content %}
+    <h2>Административная панель - Назначение дежурств</h2>
+    <button onclick="redirectToDutySchedule()">Перейти к назначению дежурств</button>
+
+    <script>
+        function redirectToDutySchedule() {
+            window.location.href = window.location.pathname + 'duty-schedule/';
+        }
+    </script>
+{% endblock %}

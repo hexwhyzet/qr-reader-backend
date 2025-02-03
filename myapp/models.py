@@ -29,7 +29,7 @@ class VerboseUserDisplay(User):
         proxy = True
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.username})"
+        return f"{self.last_name} {self.first_name} ({self.username})"
 
 
 class Guard(models.Model):

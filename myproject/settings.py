@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('DJANGO_SECRET')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['10.0.2.2', 'localhost', '127.0.0.1', os.getenv('HOST'), 'localhost:8000']
 
@@ -43,9 +43,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
+    'storages',
     'rest_framework_simplejwt',
     'myapp',
     'food',
+    'dispatch',
 
     'django.contrib.admin',
 ]
@@ -136,6 +138,7 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static/'),
 )
+STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
 # X_FRAME_OPTIONS = 'SAMEORIGIN'
 
@@ -163,3 +166,13 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 USE_X_FORWARDED_HOST = True
+
+DEFAULT_FILE_STORAGE = 'dispatch.models.S3MediaStorage'
+AWS_ACCESS_KEY_ID = os.getenv('S3_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('S3_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.getenv('S3_STORAGE_BUCKET_NAME')
+AWS_S3_REGION_NAME = os.getenv('S3_REGION_NAME')
+AWS_S3_ENDPOINT_URL = f'https://storage.yandexcloud.net'
+AWS_S3_FILE_OVERWRITE = False
+AWS_S3_ADDRESSING_STYLE = "path"
+AWS_QUERYSTRING_AUTH = False
