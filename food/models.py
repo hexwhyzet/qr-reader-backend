@@ -66,7 +66,7 @@ class Order(models.Model):
         verbose_name_plural = "Заказы"
 
     def __str__(self):
-        return f"Order by {self.user} for {self.dish}"
+        return f"Заказ блюда: {self.dish}, для: {self.user}"
 
 class Feedback(models.Model):
     dish = models.ForeignKey(Dish, on_delete=models.CASCADE, verbose_name='Блюдо')
