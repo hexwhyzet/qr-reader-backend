@@ -5,8 +5,12 @@ import urllib.parse
 from django import forms
 from django.contrib import admin
 from django.contrib.admin import AdminSite
+from django.contrib.admin.forms import AdminPasswordChangeForm
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
+from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.models import User, Group
+from django.contrib.auth.views import PasswordChangeView
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import path
@@ -400,6 +404,47 @@ class CustomUserAdmin(UserAdmin):
     def has_delete_permission(self, request, obj=None):
         return request.user.is_superuser or is_user_manager(request.user)
 
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        user = get_object_or_404(User, pk=object_id)
+        change_password_url = reverse('admin:auth_user_password_change', args=[user.id])
+
+        extra_context = extra_context or {}
+        extra_context['change_password_url'] = change_password_url
+
+        return super().change_view(request, object_id, form_url, extra_context=extra_context)
+
+    def get_urls(self):
+        from django.urls import path
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                '<int:user_id>/password/',
+                self.admin_site.admin_view(self.change_password),
+                name='auth_user_password_change',
+            ),
+        ]
+        return custom_urls + urls
+
+    def change_password(self, request, user_id):
+        user_to_change = User.objects.get(pk=user_id)
+
+        if not (request.user.is_superuser or
+                request.user.groups.filter(name='senior_user_manager').exists() or
+                request.user == user_to_change):
+            raise PermissionDenied("У вас нет прав для смены этого пароля.")
+
+        if request.method == 'POST':
+            form = SetPasswordForm(user_to_change, request.POST)
+            if form.is_valid():
+                form.save()
+                return redirect('admin:auth_user_change', user_id)
+        else:
+            form = SetPasswordForm(user_to_change)
+
+        return render(request, 'admin/auth/user/change_password.html', {
+            'form': form,
+            'user_to_change': user_to_change,
+        })
 
 admin.site = MyAdminSite()
 
