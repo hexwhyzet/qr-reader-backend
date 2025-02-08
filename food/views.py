@@ -64,6 +64,15 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Response(aggregate_data)
 
 
+class RemovedOrderViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Order.objects.filter(is_deleted=True)
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated, DjangoModelPermissions, CanAccessOrderStats]
+    
+    def get_queryset(self):
+        today = timezone.now().date()
+        return Order.objects.filter(is_deleted=True, cooking_time__gte=today)
+
 class FeedbackViewSet(viewsets.ModelViewSet):
     queryset = Feedback.objects.all()
     serializer_class = FeedbackSerializer

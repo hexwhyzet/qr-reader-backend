@@ -32,12 +32,6 @@ class AllowedDish(models.Model):
 
     def __str__(self):
         return f"{self.dish.name} ({self.date})"
-    
-class OrderStatus(models.TextChoices):
-    PENDING = 'Pending', 'Ожидает'
-    APPROVED = 'Approved', 'Подтверждено'
-    CANCELED = 'Canceled', 'Отменено'
-    COMPLETED = 'Completed', 'Завершено'
 
 class Order(models.Model):
     is_deleted = models.BooleanField(default=False, verbose_name='Удалён')
@@ -48,12 +42,6 @@ class Order(models.Model):
     cooking_time = models.DateField(verbose_name='Дата готовки блюда')
     comment = models.TextField(blank=True, null=True, verbose_name='Комментарий к заказу')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
-    status = models.CharField(
-        max_length=50,
-        choices=OrderStatus.choices,
-        default=OrderStatus.PENDING,
-        verbose_name='Статус заказа'
-    )
     
     def delete(self, reason=None, *args, **kwargs):
         self.is_deleted = True
