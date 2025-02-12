@@ -16,7 +16,6 @@ class AllowedDishSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=fields.CurrentUserDefault())
-    status = serializers.ReadOnlyField()
     
     def validate_cooking_time(self, value):
         old_cooking_time = self.instance.cooking_time if self.instance else None
