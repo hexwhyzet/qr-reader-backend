@@ -50,6 +50,12 @@ INSTALLED_APPS = [
     'dispatch',
 
     'django.contrib.admin',
+
+    'django_cron',
+]
+
+CRON_CLASSES = [
+    'dispatch.crons.NeedToOpenNotification',
 ]
 
 MIDDLEWARE = [

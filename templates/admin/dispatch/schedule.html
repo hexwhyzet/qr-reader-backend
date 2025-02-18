@@ -31,7 +31,7 @@
                                 <div>
                                     {% for duty in duties %}
                                         <div style="padding-top: 10px; font-weight: bold; color: {{ duty.color }};">
-                                            {{ duty.user.last_name|add:" "|add:duty.user.first_name }}
+                                            {{ duty.user.display_name }}
                                         </div>
                                     {% endfor %}
                                 </div>

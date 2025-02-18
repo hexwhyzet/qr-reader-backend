@@ -11,7 +11,7 @@ from myapp.custom_groups import (
     SeniorUserManager,
     CanteenManager,
     CanteenEmployee,
-    CanteenAdminManager
+    CanteenAdminManager, DispatchAdminManager
 )
 
 
@@ -59,6 +59,9 @@ roles = {
         'order': [PermissionType.VIEW],
         'feedback': [PermissionType.ADD]
     },
+    DispatchAdminManager: {
+
+    }
 }
 
 
@@ -68,7 +71,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         for custom_group in roles.keys():
             group, _ = Group.objects.get_or_create(name=custom_group.name)
-            
+
             group.permissions.clear()
 
             for model_name in roles[custom_group].keys():

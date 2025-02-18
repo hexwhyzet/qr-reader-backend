@@ -1,3 +1,4 @@
+import enum
 import os
 import uuid
 
@@ -5,6 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.utils.deconstruct import deconstructible
 from storages.backends.s3boto3 import S3Boto3Storage
 
 from myapp.models import VerboseUserDisplay
@@ -56,7 +58,6 @@ class Duty(models.Model):
     # Нотификация о том, что ответственный человек не принял дежурство
     notification_need_to_open = models.ForeignKey("Notification", on_delete=models.SET_NULL, null=True, blank=True)
 
-
     class Meta:
         verbose_name = "Дежурство"
         verbose_name_plural = "Дежурства"
@@ -66,21 +67,32 @@ class Duty(models.Model):
         return f"{self.user} - {self.date} ({self.role})"
 
 
+class IncidentStatusEnum(enum.Enum):
+    OPENED = 'opened'
+    CLOSED = 'closed'
+    FORCE_CLOSED = 'force_closed'
+
+
 class Incident(models.Model):
     STATUS_CHOICES = [
-        ('opened', 'В работе'),
-        ('closed', 'Выполнено'),
-        ('force_closed', 'Ненадлежащее выполнение'),
+        (IncidentStatusEnum.OPENED.value, 'В работе'),
+        (IncidentStatusEnum.CLOSED.value, 'Выполнено'),
+        (IncidentStatusEnum.FORCE_CLOSED.value, 'Ненадлежащее выполнение'),
     ]
 
     name = models.CharField(max_length=255, verbose_name='Имя инцидента')
     description = models.TextField(verbose_name='Описание инцидента')
     status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='opened', verbose_name='Статус')
     level = models.PositiveSmallIntegerField(default=0, verbose_name='Уровень')
-    is_critical = models.BooleanField(default=False, verbose_name='Критичный', help_text='Автоматически выставляется, если ни один из уровней не справился с выполнением')
-    author = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='opened_incident', verbose_name='Автор')
-    responsible_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='responsible_incidents', verbose_name='Ответственный дежурный')
-    point = models.ForeignKey(DutyPoint, on_delete=models.SET_NULL, null=True, related_name='incidents', verbose_name='Точка диспетчеризации')
+    is_critical = models.BooleanField(default=False, verbose_name='Критичный',
+                                      help_text='Автоматически выставляется, если ни один из уровней не справился с выполнением')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='opened_incident',
+                               verbose_name='Автор')
+    responsible_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                         related_name='responsible_incidents', verbose_name='Ответственный дежурный')
+    point = models.ForeignKey(DutyPoint, on_delete=models.SET_NULL, null=True, related_name='incidents',
+                              verbose_name='Точка диспетчеризации')
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = "Инцидент"
@@ -92,8 +104,9 @@ class Incident(models.Model):
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
-    text = models.TextField()
-    is_sent = models.BooleanField(default=False)
+    title = models.TextField(max_length=255, null=True)
+    text = models.TextField(max_length=255, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
 
     def __str__(self):
         return f"Уведомление для {self.user} - {'Отправлено' if self.is_sent else 'Не отправлено'}"
@@ -129,13 +142,16 @@ class IncidentMessage(models.Model):
         return f"Message from {self.user or 'system'} ({self.content_type}) at {self.created_at}"
 
 
-def wrapped_upload_to_uuid(prefix):
-    def upload_to_uuid(instance, filename):
-        ext = filename.split('.')[-1]
-        new_filename = f"{uuid.uuid4()}.{ext}"
-        return os.path.join(f'{prefix}/', new_filename)
+@deconstructible
+class PathAndRename(object):
 
-    return upload_to_uuid
+    def __init__(self, sub_path):
+        self.path = sub_path
+
+    def __call__(self, instance, filename):
+        ext = filename.split('.')[-1]
+        filename = '{}.{}'.format(uuid.uuid4().hex, ext)
+        return os.path.join(self.path, filename)
 
 
 class TextMessage(models.Model):
@@ -148,14 +164,14 @@ class TextMessage(models.Model):
 
 class PhotoMessage(models.Model):
     message = models.OneToOneField(IncidentMessage, on_delete=models.CASCADE, related_name="photo")
-    photo = models.ImageField(storage=S3MediaStorage(), upload_to=wrapped_upload_to_uuid("photos"))
+    photo = models.ImageField(storage=S3MediaStorage(), upload_to=PathAndRename("photos"))
 
 
 class VideoMessage(models.Model):
     message = models.OneToOneField(IncidentMessage, on_delete=models.CASCADE, related_name="video")
-    video = models.FileField(storage=S3MediaStorage(), upload_to=wrapped_upload_to_uuid("videos"))
+    video = models.FileField(storage=S3MediaStorage(), upload_to=PathAndRename("videos"))
 
 
 class AudioMessage(models.Model):
     message = models.OneToOneField(IncidentMessage, on_delete=models.CASCADE, related_name="audio")
-    audio = models.FileField(storage=S3MediaStorage(), upload_to=wrapped_upload_to_uuid("audios"))
+    audio = models.FileField(storage=S3MediaStorage(), upload_to=PathAndRename("audios"))

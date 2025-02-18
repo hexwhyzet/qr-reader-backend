@@ -1,7 +1,12 @@
+from django.contrib.auth.models import User
+from django.db.models import Q
+
 from dispatch.models import Incident
 from dispatch.services.duties import get_current_duties
 from dispatch.services.messages import create_escalation_error_message_duty_not_opened, create_escalation_message
 from dispatch.utils import now
+from myapp.admin import user_has_group
+from myapp.custom_groups import DispatchAdminManager
 
 
 def escalate_incident(incident: Incident):
@@ -11,6 +16,7 @@ def escalate_incident(incident: Incident):
             create_escalation_message(incident, i, None)
             incident.level = i
             incident.is_critical = True
+            incident.responsible_user = None
             continue
 
         duty_role = getattr(incident.point, f"level_{i}_role")
@@ -27,3 +33,10 @@ def escalate_incident(incident: Incident):
         break
 
     incident.save()
+
+
+def user_incidents(user: User):
+    if user_has_group(user, DispatchAdminManager):
+        return Incident.objects.all()
+
+    return Incident.objects.filter(Q(author_id=user.id) | Q(responsible_user_id=user.id)).all()

@@ -19,7 +19,7 @@ from food.models import Feedback
 from myapp.admin_mixins import CustomAdmin
 from myapp.custom_groups import UserManager, SeniorUserManager, CanteenAdminManager
 from myapp.excel import fire_extinguishers, guards_stats
-from myapp.models import Guard, Round, Visit, Point, Message
+from myapp.models import Guard, Round, Visit, Point, Message, Device
 from myapp.services.guards import get_manager_guards, get_guard_by_guard_id
 from myapp.services.messages import messages_by_user
 
@@ -414,5 +414,6 @@ admin.site.register(Point, PointAdmin)
 admin.site.register(Message, MessageAdmin)
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(Group, GroupAdmin)
+admin.site.register(Device)
 register_food_admin(admin.site)
 register_dispatch_admin(admin.site)

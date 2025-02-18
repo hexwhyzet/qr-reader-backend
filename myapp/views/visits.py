@@ -18,5 +18,4 @@ class VisitPointsView(APIView):
             serializer = VisitSerializer(visit)
             return SuccessJsonResponse(data=serializer.data, status=status.HTTP_200_OK)
         except (Exception,) as e:
-            print(e)
             return SuccessJsonResponse(success=False, status=status.HTTP_400_BAD_REQUEST)

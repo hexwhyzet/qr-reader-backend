@@ -24,9 +24,23 @@ def pretty_datetime(dt):
     return f"{dt.astimezone(getTimezone()).date()} {dt.astimezone(getTimezone()).replace(microsecond=0).time()}"
 
 
+def display_name(user):
+    if len(user.first_name) > 0 and len(user.last_name) > 0:
+        return user.first_name + ' ' + user.last_name
+    elif len(user.first_name) > 0:
+        return user.first_name
+    elif len(user.last_name) > 0:
+        return user.last_name
+    return user.username
+
+
 class VerboseUserDisplay(User):
     class Meta:
         proxy = True
+
+    @property
+    def display_name(self):
+        return display_name(self)
 
     def __str__(self):
         return f"{self.last_name} {self.first_name} ({self.username})"
@@ -37,7 +51,8 @@ class Guard(models.Model):
     code = models.CharField(max_length=6, unique=True, default=generate_six_digit_code, editable=False,
                             verbose_name='Код сотрудника')
 
-    managers = models.ManyToManyField(User, limit_choices_to=Q(groups__name='Managers') | Q(groups__name='qr_manager'), default=None,
+    managers = models.ManyToManyField(User, limit_choices_to=Q(groups__name='Managers') | Q(groups__name='qr_manager'),
+                                      default=None,
                                       related_name='guards', verbose_name='Менеджеры', blank=False)
 
     user = models.ForeignKey(VerboseUserDisplay, on_delete=models.CASCADE, related_name='guard_profile',
@@ -138,3 +153,8 @@ class Message(models.Model):
     class Meta:
         verbose_name = "Сообщение"
         verbose_name_plural = "Сообщение"
+
+
+class Device(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='device')
+    notification_token = models.CharField(max_length=255)

@@ -1,28 +1,54 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .models import IncidentMessage, TextMessage, PhotoMessage, VideoMessage, AudioMessage, Incident, Duty, DutyRole
+from myapp.models import display_name
+from .models import IncidentMessage, TextMessage, PhotoMessage, VideoMessage, AudioMessage, Incident, Duty, DutyRole, \
+    DutyPoint
 
 
 class UserSerializer(serializers.ModelSerializer):
+    display_name = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name']
+        fields = ['id', 'username', 'first_name', 'last_name', 'display_name']
+
+    def get_display_name(self, obj):
+        return display_name(obj)
+
+
+class DutyPointSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DutyPoint
+        fields = ['id', 'name']
 
 
 class IncidentSerializer(serializers.ModelSerializer):
+    author = UserSerializer(read_only=True)
+    responsible_user = UserSerializer(read_only=True)
+    point = DutyPointSerializer(read_only=True)
+    display_status = serializers.SerializerMethodField()
+
+    point_id = serializers.PrimaryKeyRelatedField(
+        queryset=DutyPoint.objects.all(), write_only=True, source='point'
+    )
+
+    def get_display_status(self, obj):
+        for key, value in obj.STATUS_CHOICES:
+            if key == obj.status:
+                return value
+        return "Неизвестен"
+
     class Meta:
         model = Incident
         fields = '__all__'
         read_only_fields = ['id', 'status', 'is_critical', 'responsible_user']
 
     def create(self, validated_data):
-        # user = self.context['request'].user
-        # if user.is_authenticated:
-        #     validated_data['author'] = user
-        validated_data['author'] = User.objects.get(pk=7)
+        user = self.context['request'].user
+        if user.is_authenticated:
+            validated_data['author'] = user
         return super().create(validated_data)
-
 
 
 class DutyRoleSerializer(serializers.ModelSerializer):
@@ -64,7 +90,8 @@ class AudioMessageSerializer(serializers.ModelSerializer):
         fields = ["audio"]
 
 
-class MessageSerializer(serializers.ModelSerializer):
+class IncidentMessageSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
     content = serializers.SerializerMethodField()
 
     class Meta:

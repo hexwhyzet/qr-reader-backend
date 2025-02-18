@@ -186,6 +186,11 @@ class DutyAdmin(CustomAdmin):
     exclude = ('notification_need_to_open',)
 
 
+class IncidentAdmin(CustomAdmin):
+    list_display = ('name', 'author', 'created_at',)
+    readonly_fields = ('created_at',)
+
+
 dispatch_admin_site = DispatchAdmin()
 
 
@@ -193,7 +198,7 @@ def register_dispatch_admin(site):
     site.register(DutyPoint)
     site.register(DutyRole, DutyRoleAdmin)
     site.register(Duty, DutyAdmin)
-    site.register(Incident)
+    site.register(Incident, IncidentAdmin)
     site.register(IncidentMessage)
     site.register(TextMessage)
     site.register(VideoMessage)

@@ -3,7 +3,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from myapp.models import Device
 from myapp.serializers import SuccessJsonResponse
+from myapp.utils import send_fcm_notification
 
 
 class UserInfo(APIView):
@@ -21,4 +23,21 @@ class UserInfo(APIView):
             'groups': [group.name for group in user.groups.all()],
             'extra': extra,
         }
+
         return SuccessJsonResponse(data=content)
+
+
+class RegisterNotificationToken(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        notification_token = request.data.get('notification_token')
+
+        if not notification_token:
+            return Response({'error': 'Notification token is required'}, status=400)
+
+        device, created = Device.objects.update_or_create(user=user, defaults={'notification_token': notification_token})
+
+        return Response({'message': 'Notification token registered successfully'}, status=201)

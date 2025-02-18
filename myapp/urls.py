@@ -1,6 +1,6 @@
 from django.urls import path
 
-from myapp.views.auth import UserInfo
+from myapp.views.auth import UserInfo, RegisterNotificationToken
 from myapp.views.guards import GuardView
 from myapp.views.messages import PointMessageView
 from myapp.views.rounds import StartRoundView, EndRoundView, RoundStatusView
@@ -8,6 +8,7 @@ from myapp.views.visits import VisitPointsView
 
 urlpatterns = [
     path('whoami', UserInfo.as_view(), name='whoami'),
+    path('register_notification_token', RegisterNotificationToken.as_view(), name='register-notification-token'),
 
     path('auth/<int:guard_id>', GuardView.as_view(), name='guard'),
 
