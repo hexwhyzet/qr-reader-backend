@@ -60,6 +60,7 @@ class Feedback(models.Model):
     dish = models.ForeignKey(Dish, on_delete=models.CASCADE, verbose_name='Блюдо')
     comment = models.TextField(verbose_name='Отзыв')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    photo = models.ImageField(upload_to='feedback_photos/', verbose_name='Фотография блюда', blank=True, null=True)
     is_read = models.BooleanField(default=False)
     
     class Meta:
