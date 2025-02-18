@@ -8,8 +8,14 @@ from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.db import models
 from django.db.models import Q
+from storages.backends.s3boto3 import S3Boto3Storage
 
 from myproject import settings
+
+
+class DefaultS3MediaStorage(S3Boto3Storage):
+    bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+    location = ''
 
 
 def generate_six_digit_code():

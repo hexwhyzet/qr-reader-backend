@@ -13,7 +13,7 @@ from myapp.models import VerboseUserDisplay
 from myproject import settings
 
 
-class S3MediaStorage(S3Boto3Storage):
+class DispatchS3MediaStorage(S3Boto3Storage):
     bucket_name = settings.AWS_STORAGE_BUCKET_NAME
     location = 'dispatch_media'
     file_overwrite = False
@@ -164,14 +164,14 @@ class TextMessage(models.Model):
 
 class PhotoMessage(models.Model):
     message = models.OneToOneField(IncidentMessage, on_delete=models.CASCADE, related_name="photo")
-    photo = models.ImageField(storage=S3MediaStorage(), upload_to=PathAndRename("photos"))
+    photo = models.ImageField(storage=DispatchS3MediaStorage(), upload_to=PathAndRename("photos"))
 
 
 class VideoMessage(models.Model):
     message = models.OneToOneField(IncidentMessage, on_delete=models.CASCADE, related_name="video")
-    video = models.FileField(storage=S3MediaStorage(), upload_to=PathAndRename("videos"))
+    video = models.FileField(storage=DispatchS3MediaStorage(), upload_to=PathAndRename("videos"))
 
 
 class AudioMessage(models.Model):
     message = models.OneToOneField(IncidentMessage, on_delete=models.CASCADE, related_name="audio")
-    audio = models.FileField(storage=S3MediaStorage(), upload_to=PathAndRename("audios"))
+    audio = models.FileField(storage=DispatchS3MediaStorage(), upload_to=PathAndRename("audios"))
