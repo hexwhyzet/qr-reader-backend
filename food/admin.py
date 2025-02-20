@@ -28,6 +28,12 @@ class FeedbackModelAdmin(CustomAdmin):
     exclude = ['user',]
 class OrderAdmin(CustomAdmin):
     change_list_template = 'admin/order/change_list.html'
+    
+    def has_delete_permission(self, request, obj=None):
+        """
+        У нас soft delete, так что тут False
+        """
+        return False
 
     def changelist_view(self, request, extra_context=None):
         """
