@@ -60,7 +60,10 @@ roles = {
         'feedback': [PermissionType.VIEW, PermissionType.ADD]
     },
     DispatchAdminManager: {
-
+        'incident': ALL_PERMISSIONS,
+        'duty': ALL_PERMISSIONS,
+        'dutyrole': ALL_PERMISSIONS,
+        'dutypoint': ALL_PERMISSIONS,
     }
 }
 
