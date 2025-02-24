@@ -7,6 +7,7 @@ from dispatch.services.messages import create_escalation_error_message_duty_not_
 from dispatch.utils import now
 from myapp.admin import user_has_group
 from myapp.custom_groups import DispatchAdminManager
+from myapp.utils import send_fcm_notification
 
 
 def escalate_incident(incident: Incident):
@@ -29,6 +30,9 @@ def escalate_incident(incident: Incident):
             create_escalation_error_message_duty_not_opened(incident, i, duty)
             continue
         incident.level = i
+        incident.responsible_user = duty.responsible_user
+        if incident.responsible_user is not None:
+            send_fcm_notification(incident.responsible_user, "Новый инцидент", incident.name)
         create_escalation_message(incident, i, duty)
         break
 
