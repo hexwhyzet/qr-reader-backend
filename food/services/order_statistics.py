@@ -8,7 +8,7 @@ class OrderService:
         if not date:
             date = timezone.now().date()
 
-        aggregate_data = Order.objects.filter(cooking_time=date) \
+        aggregate_data = Order.objects.filter(cooking_time=date, is_deleted=False) \
                                       .values('dish__name', 'dish__id') \
                                       .annotate(total_orders=Count('id'))
 
