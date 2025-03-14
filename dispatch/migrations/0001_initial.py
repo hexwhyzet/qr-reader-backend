@@ -72,7 +72,7 @@ class Migration(migrations.Migration):
             name='AudioMessage',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('audio', models.FileField(storage=dispatch.models.S3MediaStorage(), upload_to='audios/')),
+                ('audio', models.FileField(storage=dispatch.models.DispatchS3MediaStorage(), upload_to='audios/')),
                 ('message', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='audio', to='dispatch.incidentmessage')),
             ],
         ),
@@ -89,7 +89,7 @@ class Migration(migrations.Migration):
             name='PhotoMessage',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('photo', models.ImageField(storage=dispatch.models.S3MediaStorage(), upload_to='photos/')),
+                ('photo', models.ImageField(storage=dispatch.models.DispatchS3MediaStorage(), upload_to='photos/')),
                 ('message', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='photo', to='dispatch.incidentmessage')),
             ],
         ),
@@ -105,7 +105,7 @@ class Migration(migrations.Migration):
             name='VideoMessage',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('video', models.FileField(storage=dispatch.models.S3MediaStorage(), upload_to='videos/')),
+                ('video', models.FileField(storage=dispatch.models.DispatchS3MediaStorage(), upload_to='videos/')),
                 ('message', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='video', to='dispatch.incidentmessage')),
             ],
         ),

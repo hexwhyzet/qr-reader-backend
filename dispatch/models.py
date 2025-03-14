@@ -6,6 +6,8 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.db.models import UniqueConstraint
+from django.db.models.functions import TruncDate
 from django.utils.deconstruct import deconstructible
 from storages.backends.s3boto3 import S3Boto3Storage
 
@@ -50,10 +52,12 @@ class DutyPoint(models.Model):
 
 
 class Duty(models.Model):
-    date = models.DateField(verbose_name='Дата дежурства')
     user = models.ForeignKey(VerboseUserDisplay, on_delete=models.CASCADE, verbose_name='Аккаунт дежурного')
     role = models.ForeignKey(DutyRole, on_delete=models.CASCADE, null=True, verbose_name='Роль дежурства')
-    is_opened = models.BooleanField(default=False, verbose_name="Открыт ли")
+    is_opened = models.BooleanField(default=False, verbose_name='Открыт ли')
+
+    start_datetime = models.DateTimeField(verbose_name='Начало дежурства', null=False, blank=False)
+    end_datetime = models.DateTimeField(verbose_name='Окончание дежурства', null=False, blank=False)
 
     # Нотификация о том, что ответственный человек не принял дежурство
     notification_need_to_open = models.ForeignKey("Notification", on_delete=models.SET_NULL, null=True, blank=True)
@@ -61,7 +65,18 @@ class Duty(models.Model):
     class Meta:
         verbose_name = "Дежурство"
         verbose_name_plural = "Дежурства"
-        unique_together = ('date', 'role')
+
+        constraints = [
+            UniqueConstraint(
+                TruncDate('start_datetime'),
+                'role',
+                name='unique_start_date',
+            ),
+        ]
+
+    @property
+    def date(self):
+        return self.start_datetime.date() if self.start_datetime else None
 
     def __str__(self):
         return f"{self.user} - {self.date} ({self.role})"

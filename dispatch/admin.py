@@ -9,7 +9,7 @@ from django.utils.html import format_html
 
 from dispatch.models import DutyPoint, DutyRole, Duty, IncidentMessage, TextMessage, VideoMessage, PhotoMessage, \
     AudioMessage, Incident
-from dispatch.services.duties import get_duties_by_date, get_duties_assigned
+from dispatch.services.duties import get_duties_by_date, get_duties_assigned, get_or_create_duty, delete_duty
 from dispatch.utils import colors_palette, decl, today
 from myapp.admin_mixins import CustomAdmin
 from myapp.services.users import get_all_users
@@ -117,8 +117,7 @@ class DutyRoleAdmin(CustomAdmin):
                     for _ in range(duty_step):
                         if current_date > end_date:
                             break
-                        duty, created = Duty.objects.get_or_create(date=current_date, role=duty_role,
-                                                                   defaults={"user": user})
+                        duty, created = get_or_create_duty(duty_date=current_date, role=duty_role, defaults={"user": user})
                         if not created:
                             duty.user = user
                         duty.save()
@@ -133,7 +132,7 @@ class DutyRoleAdmin(CustomAdmin):
                     end_date = start_date
                 current_date = start_date
                 while current_date <= end_date:
-                    Duty.objects.filter(date=current_date, role=duty_role).delete()
+                    delete_duty(current_date, duty_role)
                     current_date += timedelta(days=1)
 
         today_date = today()

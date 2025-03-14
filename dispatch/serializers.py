@@ -60,10 +60,14 @@ class DutyRoleSerializer(serializers.ModelSerializer):
 class DutySerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     role = DutyRoleSerializer(read_only=True)
+    date = serializers.SerializerMethodField()
 
     class Meta:
         model = Duty
         fields = '__all__'
+
+    def get_date(self, obj):
+        return obj.date
 
 
 class TextMessageSerializer(serializers.ModelSerializer):

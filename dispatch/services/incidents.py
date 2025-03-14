@@ -30,7 +30,7 @@ def escalate_incident(incident: Incident):
             create_escalation_error_message_duty_not_opened(incident, i, duty)
             continue
         incident.level = i
-        incident.responsible_user = duty.responsible_user
+        incident.responsible_user = duty.user
         if incident.responsible_user is not None:
             send_fcm_notification(incident.responsible_user, "Новый инцидент", incident.name)
         create_escalation_message(incident, i, duty)

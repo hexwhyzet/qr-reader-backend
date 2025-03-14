@@ -10,10 +10,10 @@ from rest_framework.response import Response
 
 from myapp.admin import user_has_group
 from myapp.custom_groups import DispatchAdminManager
-from .models import IncidentMessage, Incident, Duty, DutyPoint, IncidentStatusEnum
+from .models import IncidentMessage, Incident, DutyPoint, IncidentStatusEnum
 from .serializers import TextMessageSerializer, PhotoMessageSerializer, VideoMessageSerializer, \
     AudioMessageSerializer, IncidentSerializer, DutySerializer, DutyPointSerializer, IncidentMessageSerializer
-from .services.duties import get_duties_by_date, get_current_duties
+from .services.duties import get_duties_by_date, get_current_duties, get_all_duties, get_duty_by_id
 from .services.incidents import escalate_incident, user_incidents
 from .utils import now
 
@@ -37,6 +37,7 @@ class DutyPointViewSet(viewsets.ModelViewSet):
 
 class IncidentViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
+
     def list(self, request):
         incidents = Incident.objects.all()
         serializer = IncidentSerializer(incidents, many=True)
@@ -120,7 +121,7 @@ class IncidentViewSet(viewsets.ViewSet):
 class DutyViewSet(viewsets.ReadOnlyModelViewSet):  # ReadOnly since no update/create
     permission_classes = [IsAuthenticated]
     serializer_class = DutySerializer
-    queryset = Duty.objects.all()
+    queryset = get_all_duties()
     filterset_fields = ['date', 'role', 'is_opened']
 
     def get_queryset(self):
@@ -141,7 +142,7 @@ class DutyViewSet(viewsets.ReadOnlyModelViewSet):  # ReadOnly since no update/cr
 
     @action(detail=True, methods=['post'])
     def open(self, request, pk=None):
-        duty = Duty.objects.get(pk=pk)
+        duty = get_duty_by_id(pk)
 
         if duty.user != request.user:
             return Response({"error": "Открыть дежурство может только сам дежурный"}, status=403)

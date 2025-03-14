@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='audiomessage',
             name='audio',
-            field=models.FileField(storage=dispatch.models.S3MediaStorage(), upload_to=dispatch.models.PathAndRename('audios')),
+            field=models.FileField(storage=dispatch.models.DispatchS3MediaStorage(), upload_to=dispatch.models.PathAndRename('audios')),
         ),
         migrations.AlterField(
             model_name='duty',
@@ -76,11 +76,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='photomessage',
             name='photo',
-            field=models.ImageField(storage=dispatch.models.S3MediaStorage(), upload_to=dispatch.models.PathAndRename('photos')),
+            field=models.ImageField(storage=dispatch.models.DispatchS3MediaStorage(), upload_to=dispatch.models.PathAndRename('photos')),
         ),
         migrations.AlterField(
             model_name='videomessage',
             name='video',
-            field=models.FileField(storage=dispatch.models.S3MediaStorage(), upload_to=dispatch.models.PathAndRename('videos')),
+            field=models.FileField(storage=dispatch.models.DispatchS3MediaStorage(), upload_to=dispatch.models.PathAndRename('videos')),
         ),
     ]
