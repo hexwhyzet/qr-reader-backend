@@ -61,7 +61,7 @@ class Guard(models.Model):
                                       default=None,
                                       related_name='guards', verbose_name='Менеджеры', blank=False)
 
-    user = models.ForeignKey(VerboseUserDisplay, on_delete=models.CASCADE, related_name='guard_profile',
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='guard_profile',
                              verbose_name='Аккаунт сотрудника', default=None, null=True, blank=False)
 
     @property

@@ -11,7 +11,6 @@ from django.db.models.functions import TruncDate
 from django.utils.deconstruct import deconstructible
 from storages.backends.s3boto3 import S3Boto3Storage
 
-from myapp.models import VerboseUserDisplay
 from myproject import settings
 
 
@@ -52,7 +51,7 @@ class DutyPoint(models.Model):
 
 
 class Duty(models.Model):
-    user = models.ForeignKey(VerboseUserDisplay, on_delete=models.CASCADE, verbose_name='Аккаунт дежурного')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Аккаунт дежурного')
     role = models.ForeignKey(DutyRole, on_delete=models.CASCADE, null=True, verbose_name='Роль дежурства')
     is_opened = models.BooleanField(default=False, verbose_name='Открыт ли')
 
