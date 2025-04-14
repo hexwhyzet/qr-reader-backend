@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
-from myapp.models import display_name
 from myproject.settings import AUTH_USER_MODEL
+from users.models import display_name
 from .models import IncidentMessage, TextMessage, PhotoMessage, VideoMessage, AudioMessage, Incident, Duty, DutyRole, \
     DutyPoint
 
