@@ -1,9 +1,9 @@
-from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
 from storages.backends.s3boto3 import S3Boto3Storage
 
 from myproject import settings
+from myproject.settings import AUTH_USER_MODEL
 
 
 class FoodS3MediaStorage(S3Boto3Storage):
@@ -49,7 +49,7 @@ class Order(models.Model):
     is_deleted = models.BooleanField(default=False, verbose_name='Удалён')
     deletion_reason = models.TextField(null=True, blank=True, verbose_name='Причина удаления')
     deleted_at = models.DateTimeField(null=True, blank=True, verbose_name='Время удаления')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользователь')
+    user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='Пользователь')
     dish = models.ForeignKey(Dish, on_delete=models.CASCADE, verbose_name='Блюдо')
     cooking_time = models.DateField(verbose_name='Дата готовки блюда')
     comment = models.TextField(blank=True, null=True, verbose_name='Комментарий к заказу')

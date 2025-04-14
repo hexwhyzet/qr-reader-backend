@@ -2,7 +2,6 @@ import enum
 import os
 import uuid
 
-from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -12,6 +11,7 @@ from django.utils.deconstruct import deconstructible
 from storages.backends.s3boto3 import S3Boto3Storage
 
 from myproject import settings
+from myproject.settings import AUTH_USER_MODEL
 
 
 class DispatchS3MediaStorage(S3Boto3Storage):
@@ -51,7 +51,7 @@ class DutyPoint(models.Model):
 
 
 class Duty(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Аккаунт дежурного')
+    user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='Аккаунт дежурного')
     role = models.ForeignKey(DutyRole, on_delete=models.CASCADE, null=True, verbose_name='Роль дежурства')
     is_opened = models.BooleanField(default=False, verbose_name='Открыт ли')
 
@@ -100,9 +100,9 @@ class Incident(models.Model):
     level = models.PositiveSmallIntegerField(default=0, verbose_name='Уровень')
     is_critical = models.BooleanField(default=False, verbose_name='Критичный',
                                       help_text='Автоматически выставляется, если ни один из уровней не справился с выполнением')
-    author = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='opened_incident',
+    author = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, related_name='opened_incident',
                                verbose_name='Автор')
-    responsible_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+    responsible_user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
                                          related_name='responsible_incidents', verbose_name='Ответственный дежурный')
     point = models.ForeignKey(DutyPoint, on_delete=models.SET_NULL, null=True, related_name='incidents',
                               verbose_name='Точка диспетчеризации')
@@ -117,7 +117,7 @@ class Incident(models.Model):
 
 
 class Notification(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')
     title = models.TextField(max_length=255, null=True)
     text = models.TextField(max_length=255, null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
@@ -141,7 +141,7 @@ class IncidentMessage(models.Model):
 
     incident = models.ForeignKey(Incident, on_delete=models.CASCADE, related_name='messages')
 
-    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE, verbose_name="Отправитель")
+    user = models.ForeignKey(AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE, verbose_name="Отправитель")
     created_at = models.DateTimeField(auto_now_add=True)
     message_type = models.CharField(max_length=10, choices=MESSAGE_TYPES)
 

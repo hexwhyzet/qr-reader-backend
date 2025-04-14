@@ -5,11 +5,10 @@ import urllib.parse
 from django import forms
 from django.contrib import admin
 from django.contrib.admin import AdminSite
-from django.contrib.admin.forms import AdminPasswordChangeForm
+from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
 from django.contrib.auth.forms import SetPasswordForm
-from django.contrib.auth.models import User, Group
-from django.contrib.auth.views import PasswordChangeView
+from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
@@ -26,6 +25,7 @@ from myapp.excel import fire_extinguishers, guards_stats
 from myapp.models import Guard, Round, Visit, Point, Message, Device
 from myapp.services.guards import get_manager_guards, get_guard_by_guard_id
 from myapp.services.messages import messages_by_user
+from myproject.settings import AUTH_USER_MODEL
 
 
 class ServicesEnum(enum.StrEnum):
@@ -62,7 +62,7 @@ class GuardsStatsForm(forms.Form):
 
 class GroupUserManagementForm(forms.Form):
     add_user = forms.ModelChoiceField(
-        queryset=User.objects,
+        queryset=get_user_model().objects,
         required=False,
         label="Добавить в сервис",
     )
@@ -70,7 +70,7 @@ class GroupUserManagementForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.group = kwargs.pop('group', None)
         super().__init__(*args, **kwargs)
-        self.fields['add_user'].queryset = User.objects.exclude(groups=self.group)
+        self.fields['add_user'].queryset = AUTH_USER_MODEL.objects.exclude(groups=self.group)
 
     def save(self):
         new_group_user = self.cleaned_data['add_user']
@@ -130,7 +130,7 @@ class MyAdminSite(AdminSite):
     def manage_group_users_delete(self, request, group_name, user_id):
         if request.method == 'POST':
             group = get_object_or_404(Group, name=group_name)
-            user = get_object_or_404(User, id=user_id)
+            user = get_object_or_404(AUTH_USER_MODEL, id=user_id)
             group.user_set.remove(user)
             return redirect(reverse('admin:manage_group_users', kwargs={'group_name': group_name}))
 
@@ -409,7 +409,7 @@ class CustomUserAdmin(UserAdmin):
         return request.user.is_superuser or is_user_manager(request.user)
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
-        user = get_object_or_404(User, pk=object_id)
+        user = get_object_or_404(AUTH_USER_MODEL, pk=object_id)
         change_password_url = reverse('admin:auth_user_password_change', args=[user.id])
 
         extra_context = extra_context or {}
@@ -430,7 +430,7 @@ class CustomUserAdmin(UserAdmin):
         return custom_urls + urls
 
     def change_password(self, request, user_id):
-        user_to_change = User.objects.get(pk=user_id)
+        user_to_change = AUTH_USER_MODEL.objects.get(pk=user_id)
 
         if not (request.user.is_superuser or
                 request.user.groups.filter(name='senior_user_manager').exists() or
@@ -450,6 +450,7 @@ class CustomUserAdmin(UserAdmin):
             'user_to_change': user_to_change,
         })
 
+
 admin.site = MyAdminSite()
 
 admin.site.register(Guard, GuardAdmin)
@@ -457,7 +458,7 @@ admin.site.register(Round, RoundAdmin)
 admin.site.register(Visit, VisitAdmin)
 admin.site.register(Point, PointAdmin)
 admin.site.register(Message, MessageAdmin)
-admin.site.register(User, CustomUserAdmin)
+admin.site.register(get_user_model(), CustomUserAdmin)
 admin.site.register(Group, GroupAdmin)
 admin.site.register(Device)
 register_food_admin(admin.site)

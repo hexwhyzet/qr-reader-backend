@@ -1,4 +1,3 @@
-from django.contrib.auth.models import User
 from django.db.models import Q
 
 from dispatch.models import Incident
@@ -8,6 +7,7 @@ from dispatch.utils import now
 from myapp.admin import user_has_group
 from myapp.custom_groups import DispatchAdminManager
 from myapp.utils import send_fcm_notification
+from myproject.settings import AUTH_USER_MODEL
 
 
 def escalate_incident(incident: Incident):
@@ -39,7 +39,7 @@ def escalate_incident(incident: Incident):
     incident.save()
 
 
-def user_incidents(user: User):
+def user_incidents(user: AUTH_USER_MODEL):
     if user_has_group(user, DispatchAdminManager):
         return Incident.objects.all()
 

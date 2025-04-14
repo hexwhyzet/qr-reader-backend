@@ -1,5 +1,5 @@
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 
 def get_all_users():
-    return User.objects.all()
+    return get_user_model().objects.all()

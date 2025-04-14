@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'myapp',
     'food',
     'dispatch',
+    'users',
 
     'django.contrib.admin',
 
@@ -182,3 +183,5 @@ AWS_S3_ENDPOINT_URL = f'https://storage.yandexcloud.net'
 AWS_S3_FILE_OVERWRITE = False
 AWS_S3_ADDRESSING_STYLE = "path"
 AWS_QUERYSTRING_AUTH = False
+
+AUTH_USER_MODEL = 'auth.User'
