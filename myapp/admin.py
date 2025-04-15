@@ -383,7 +383,7 @@ class CustomUserAdmin(UserAdmin):
             return self.add_fieldsets
 
         if not request.user.is_superuser:
-            return ((None, {'fields': ('username', 'first_name', 'last_name', 'is_staff', 'groups')}),)
+            return ((None, {'fields': ('username', 'first_name', 'last_name', 'is_staff', 'groups', 'must_change_password')}),)
         return super().get_fieldsets(request, obj)
 
     def get_readonly_fields(self, request, obj=None):

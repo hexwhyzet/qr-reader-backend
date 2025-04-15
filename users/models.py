@@ -4,7 +4,7 @@ from django.db import models
 
 def display_name(user):
     if len(user.first_name) > 0 and len(user.last_name) > 0:
-        return user.first_name + ' ' + user.last_name
+        return user.last_name + ' ' + user.first_name
     elif len(user.first_name) > 0:
         return user.first_name
     elif len(user.last_name) > 0:
@@ -13,7 +13,7 @@ def display_name(user):
 
 
 class User(AbstractUser):
-    must_change_password = models.BooleanField(default=False)
+    must_change_password = models.BooleanField(default=False, verbose_name="Необходимо сменить пароль при следующем входе в приложение")
 
     class Meta:
         db_table = 'auth_user'

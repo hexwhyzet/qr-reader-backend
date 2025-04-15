@@ -1,4 +1,7 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
+
+from users.models import display_name
 
 
 class ChangePasswordSerializer(serializers.Serializer):
@@ -9,3 +12,14 @@ class ChangePasswordSerializer(serializers.Serializer):
         from django.contrib.auth.password_validation import validate_password
         validate_password(value)
         return value
+
+
+class UserSerializer(serializers.ModelSerializer):
+    display_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = get_user_model()
+        fields = ['id', 'username', 'first_name', 'last_name', 'display_name']
+
+    def get_display_name(self, obj):
+        return display_name(obj)

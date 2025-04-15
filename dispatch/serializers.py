@@ -1,20 +1,8 @@
 from rest_framework import serializers
 
-from myproject.settings import AUTH_USER_MODEL
-from users.models import display_name
+from users.serializers import UserSerializer
 from .models import IncidentMessage, TextMessage, PhotoMessage, VideoMessage, AudioMessage, Incident, Duty, DutyRole, \
     DutyPoint
-
-
-class UserSerializer(serializers.ModelSerializer):
-    display_name = serializers.SerializerMethodField()
-
-    class Meta:
-        model = AUTH_USER_MODEL
-        fields = ['id', 'username', 'first_name', 'last_name', 'display_name']
-
-    def get_display_name(self, obj):
-        return display_name(obj)
 
 
 class DutyPointSerializer(serializers.ModelSerializer):
