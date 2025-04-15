@@ -31,10 +31,24 @@ class DutyRole(models.Model):
         return f"{self.name}"
 
 
+class ExploitationRole(models.Model):
+    name = models.CharField(max_length=100, verbose_name='Имя роли')
+
+    members = models.ManyToManyField(AUTH_USER_MODEL, related_name='exploitation_roles', verbose_name='Участники',
+                                     blank=True)
+
+    class Meta:
+        verbose_name = "Роль эксплуатации"
+        verbose_name_plural = "Роли эксплуатации"
+
+    def __str__(self):
+        return f"{self.name}"
+
+
 class DutyPoint(models.Model):
     name = models.CharField(max_length=100, verbose_name='Имя точки дежурства')
-    # level_0_role = models.ForeignKey(DutyRole, on_delete=models.SET_NULL, null=True, blank=True,
-    #                                  verbose_name='Дежурный уровня 0', related_name='level_0_role')
+    level_0_role = models.ForeignKey(ExploitationRole, on_delete=models.SET_NULL, null=True, blank=True,
+                                     verbose_name='Эксплуатирующий персонал (уровень 0)', related_name='level_0_role')
     level_1_role = models.ForeignKey(DutyRole, on_delete=models.SET_NULL, null=True, blank=True,
                                      verbose_name='Дежурный уровня 1', related_name='level_1_role')
     level_2_role = models.ForeignKey(DutyRole, on_delete=models.SET_NULL, null=True, blank=True,
@@ -100,7 +114,8 @@ class Incident(models.Model):
     level = models.PositiveSmallIntegerField(default=0, verbose_name='Уровень')
     is_critical = models.BooleanField(default=False, verbose_name='Критичный',
                                       help_text='Автоматически выставляется, если ни один из уровней не справился с выполнением')
-    author = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, related_name='opened_incident',
+    author = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True,
+                               related_name='opened_incident',
                                verbose_name='Автор')
     responsible_user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
                                          related_name='responsible_incidents', verbose_name='Ответственный дежурный')
@@ -141,7 +156,8 @@ class IncidentMessage(models.Model):
 
     incident = models.ForeignKey(Incident, on_delete=models.CASCADE, related_name='messages')
 
-    user = models.ForeignKey(AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE, verbose_name="Отправитель")
+    user = models.ForeignKey(AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE,
+                             verbose_name="Отправитель")
     created_at = models.DateTimeField(auto_now_add=True)
     message_type = models.CharField(max_length=10, choices=MESSAGE_TYPES)
 

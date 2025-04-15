@@ -14,6 +14,9 @@ def display_name(user):
 class User(AbstractUser):
     class Meta:
         db_table = 'auth_user'
+        ordering = ['last_name']
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
 
     @property
     def display_name(self):

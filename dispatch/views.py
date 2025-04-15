@@ -10,10 +10,11 @@ from rest_framework.response import Response
 
 from myapp.admin import user_has_group
 from myapp.custom_groups import DispatchAdminManager
-from .models import IncidentMessage, Incident, DutyPoint, IncidentStatusEnum
+from .models import IncidentMessage, Incident, IncidentStatusEnum
 from .serializers import TextMessageSerializer, PhotoMessageSerializer, VideoMessageSerializer, \
     AudioMessageSerializer, IncidentSerializer, DutySerializer, DutyPointSerializer, IncidentMessageSerializer
-from .services.duties import get_duties_by_date, get_current_duties, get_all_duties, get_duty_by_id
+from .services.duties import get_duties_by_date, get_current_duties, get_all_duties, get_duty_by_id, \
+    get_related_duty_points
 from .services.incidents import escalate_incident, user_incidents
 from .utils import now
 
@@ -30,9 +31,12 @@ class ListRetrieveOnlyPermission(BasePermission):
 
 
 class DutyPointViewSet(viewsets.ModelViewSet):
-    queryset = DutyPoint.objects.all()
     serializer_class = DutyPointSerializer
     permission_classes = [ListRetrieveOnlyPermission, IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return get_related_duty_points(user)
 
 
 class IncidentViewSet(viewsets.ViewSet):

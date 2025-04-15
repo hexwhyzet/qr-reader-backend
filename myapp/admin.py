@@ -409,7 +409,7 @@ class CustomUserAdmin(UserAdmin):
         return request.user.is_superuser or is_user_manager(request.user)
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
-        user = get_object_or_404(AUTH_USER_MODEL, pk=object_id)
+        user = get_object_or_404(get_user_model(), pk=object_id)
         change_password_url = reverse('admin:auth_user_password_change', args=[user.id])
 
         extra_context = extra_context or {}
@@ -458,7 +458,7 @@ admin.site.register(Round, RoundAdmin)
 admin.site.register(Visit, VisitAdmin)
 admin.site.register(Point, PointAdmin)
 admin.site.register(Message, MessageAdmin)
-admin.site.register(get_user_model(), CustomUserAdmin)
+admin.site.register(get_user_model(), CustomUserAdmin, ordering=get_user_model()._meta.ordering)
 admin.site.register(Group, GroupAdmin)
 admin.site.register(Device)
 register_food_admin(admin.site)
