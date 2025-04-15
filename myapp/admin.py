@@ -373,7 +373,7 @@ class CustomUserAdmin(UserAdmin):
             None,
             {
                 'classes': ('wide',),
-                'fields': ('username', 'password1', 'password2', 'first_name', 'last_name', 'is_staff'),
+                'fields': ('username', 'password1', 'password2', 'first_name', 'last_name', 'is_staff', 'must_change_password'),
             },
         ),
     )
