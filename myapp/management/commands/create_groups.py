@@ -1,6 +1,5 @@
 from enum import Enum
 
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
@@ -80,14 +79,15 @@ class Command(BaseCommand):
             group.permissions.clear()
 
             for model_name in roles[custom_group].keys():
-                content_type = ContentType.objects.get(model=model_name) if model_name != 'user' else ContentType.objects.get(model=model_name, app_label='users')
+                content_type = ContentType.objects.get(
+                    model=model_name) if model_name != 'user' else ContentType.objects.get(model=model_name,
+                                                                                           app_label='users')
 
                 for permission in ALL_PERMISSIONS:
                     codename = f'{permission.value}_{model_name}'
 
-                    print(codename)
-
-                    p = Permission.objects.get(codename=codename, content_type=content_type)
+                    print(codename, content_type)
+                    p, _ = Permission.objects.get_or_create(codename=codename, content_type=content_type)
                     if permission in roles[custom_group][model_name]:
                         if not group.permissions.filter(codename=p.codename).exists():
                             group.permissions.add(p)
