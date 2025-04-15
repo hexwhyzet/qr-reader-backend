@@ -31,24 +31,13 @@ def pretty_datetime(dt):
     return f"{dt.astimezone(getTimezone()).date()} {dt.astimezone(getTimezone()).replace(microsecond=0).time()}"
 
 
-class VerboseUserDisplay:
-    class Meta:
-        proxy = True
-
-    # @property
-    # def display_name(self):
-    #     return display_name(self)
-    #
-    # def __str__(self):
-    #     return f"{self.last_name} {self.first_name} ({self.username})"
-
-
 class Guard(models.Model):
     name_old = models.CharField(max_length=100, verbose_name='Имя', null=True, blank=True)
     code = models.CharField(max_length=6, unique=True, default=generate_six_digit_code, editable=False,
                             verbose_name='Код сотрудника')
 
-    managers = models.ManyToManyField(AUTH_USER_MODEL, limit_choices_to=Q(groups__name='Managers') | Q(groups__name='qr_manager'),
+    managers = models.ManyToManyField(AUTH_USER_MODEL,
+                                      limit_choices_to=Q(groups__name='Managers') | Q(groups__name='qr_manager'),
                                       default=None,
                                       related_name='guards', verbose_name='Менеджеры', blank=False)
 
