@@ -1,7 +1,7 @@
-from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 
 from dispatch.models import IncidentMessage, Incident, Duty, TextMessage
+from myproject.settings import AUTH_USER_MODEL
 
 
 def create_system_message(incident, text):
@@ -39,6 +39,6 @@ def create_close_escalation_message(incident: Incident, duty: Duty):
     return create_system_message(incident, message)
 
 
-def create_force_close_escalation_message(incident: Incident, user: User):
+def create_force_close_escalation_message(incident: Incident, user: AUTH_USER_MODEL):
     message = f"Инцидент был принудительно закрыт пользователем {user}."
     return create_system_message(incident, message)

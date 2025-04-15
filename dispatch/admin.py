@@ -8,9 +8,10 @@ from django.urls import path
 from django.utils.html import format_html
 
 from dispatch.models import DutyPoint, DutyRole, Duty, IncidentMessage, TextMessage, VideoMessage, PhotoMessage, \
-    AudioMessage, Incident
+    AudioMessage, Incident, ExploitationRole
 from dispatch.services.duties import get_duties_by_date, get_duties_assigned, get_or_create_duty, delete_duty
 from dispatch.utils import colors_palette, decl, today
+from food import admin
 from myapp.admin_mixins import CustomAdmin
 from myapp.services.users import get_all_users
 
@@ -85,6 +86,11 @@ class ClearDutyForm(forms.Form):
                                label="Дата окончания")
 
 
+class ExploitationRoleAdmin(CustomAdmin):
+    filter_horizontal = ('members',)
+
+
+
 class DutyRoleAdmin(CustomAdmin):
     list_display = ['name', 'next_duty_stats', 'duty_schedule']
 
@@ -117,7 +123,8 @@ class DutyRoleAdmin(CustomAdmin):
                     for _ in range(duty_step):
                         if current_date > end_date:
                             break
-                        duty, created = get_or_create_duty(duty_date=current_date, role=duty_role, defaults={"user": user})
+                        duty, created = get_or_create_duty(duty_date=current_date, role=duty_role,
+                                                           defaults={"user": user})
                         if not created:
                             duty.user = user
                         duty.save()
@@ -195,6 +202,7 @@ dispatch_admin_site = DispatchAdmin()
 
 def register_dispatch_admin(site):
     site.register(DutyPoint)
+    site.register(ExploitationRole, ExploitationRoleAdmin)
     site.register(DutyRole, DutyRoleAdmin)
     site.register(Duty, DutyAdmin)
     site.register(Incident, IncidentAdmin)

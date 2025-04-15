@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.utils.dateparse import parse_date
 from rest_framework import status
@@ -10,10 +11,12 @@ from rest_framework.response import Response
 
 from myapp.admin import user_has_group
 from myapp.custom_groups import DispatchAdminManager
-from .models import IncidentMessage, Incident, DutyPoint, IncidentStatusEnum
+from myapp.utils import send_fcm_notification
+from .models import IncidentMessage, Incident, IncidentStatusEnum
 from .serializers import TextMessageSerializer, PhotoMessageSerializer, VideoMessageSerializer, \
     AudioMessageSerializer, IncidentSerializer, DutySerializer, DutyPointSerializer, IncidentMessageSerializer
-from .services.duties import get_duties_by_date, get_current_duties, get_all_duties, get_duty_by_id
+from .services.duties import get_duties_by_date, get_current_duties, get_all_duties, get_duty_by_id, \
+    get_related_duty_points
 from .services.incidents import escalate_incident, user_incidents
 from .utils import now
 
@@ -30,9 +33,12 @@ class ListRetrieveOnlyPermission(BasePermission):
 
 
 class DutyPointViewSet(viewsets.ModelViewSet):
-    queryset = DutyPoint.objects.all()
     serializer_class = DutyPointSerializer
     permission_classes = [ListRetrieveOnlyPermission, IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return get_related_duty_points(user)
 
 
 class IncidentViewSet(viewsets.ViewSet):
@@ -151,6 +157,24 @@ class DutyViewSet(viewsets.ReadOnlyModelViewSet):  # ReadOnly since no update/cr
         duty.save()
 
         serializer = DutySerializer(duty)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def transfer_duty(self, request, pk=None):
+        duty = get_duty_by_id(pk)
+
+        if duty.user != request.user:
+            return Response({"error": "Передать дежурство может только сам дежурный"}, status=403)
+
+        new_user_id = request.data.get("user_id")
+        if new_user_id is None or not get_user_model().objects.filter(pk=new_user_id).exists():
+            return Response({"error": "Поле user_id в теле запроса некорректное"}, status=403)
+
+        duty.user = get_user_model().objects.get(pk=new_user_id)
+        duty.save()
+
+        serializer = DutySerializer(duty)
+        send_fcm_notification(duty.user, "Вам передано дежурство", f"{duty.user} передал вам дежурство")
         return Response(serializer.data)
 
 

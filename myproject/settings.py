@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('DJANGO_SECRET')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['10.0.2.2', 'localhost', '127.0.0.1', os.getenv('HOST'), 'localhost:8000']
 
@@ -36,7 +36,7 @@ INSTALLED_APPS = [
     'admin_interface',
     'colorfield',
 
-    'django.contrib.auth',
+    'users.authconfig.AuthConfig',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'myapp',
     'food',
     'dispatch',
+    'users',
 
     'django.contrib.admin',
 
@@ -190,3 +191,5 @@ AWS_S3_ENDPOINT_URL = f'https://storage.yandexcloud.net'
 AWS_S3_FILE_OVERWRITE = False
 AWS_S3_ADDRESSING_STYLE = "path"
 AWS_QUERYSTRING_AUTH = False
+
+AUTH_USER_MODEL = 'users.User'

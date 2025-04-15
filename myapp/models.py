@@ -11,6 +11,7 @@ from django.db.models import Q
 from storages.backends.s3boto3 import S3Boto3Storage
 
 from myproject import settings
+from myproject.settings import AUTH_USER_MODEL
 
 
 class DefaultS3MediaStorage(S3Boto3Storage):
@@ -30,26 +31,16 @@ def pretty_datetime(dt):
     return f"{dt.astimezone(getTimezone()).date()} {dt.astimezone(getTimezone()).replace(microsecond=0).time()}"
 
 
-def display_name(user):
-    if len(user.first_name) > 0 and len(user.last_name) > 0:
-        return user.first_name + ' ' + user.last_name
-    elif len(user.first_name) > 0:
-        return user.first_name
-    elif len(user.last_name) > 0:
-        return user.last_name
-    return user.username
-
-
-class VerboseUserDisplay(User):
+class VerboseUserDisplay:
     class Meta:
         proxy = True
 
-    @property
-    def display_name(self):
-        return display_name(self)
-
-    def __str__(self):
-        return f"{self.last_name} {self.first_name} ({self.username})"
+    # @property
+    # def display_name(self):
+    #     return display_name(self)
+    #
+    # def __str__(self):
+    #     return f"{self.last_name} {self.first_name} ({self.username})"
 
 
 class Guard(models.Model):
@@ -57,11 +48,11 @@ class Guard(models.Model):
     code = models.CharField(max_length=6, unique=True, default=generate_six_digit_code, editable=False,
                             verbose_name='Код сотрудника')
 
-    managers = models.ManyToManyField(User, limit_choices_to=Q(groups__name='Managers') | Q(groups__name='qr_manager'),
+    managers = models.ManyToManyField(AUTH_USER_MODEL, limit_choices_to=Q(groups__name='Managers') | Q(groups__name='qr_manager'),
                                       default=None,
                                       related_name='guards', verbose_name='Менеджеры', blank=False)
 
-    user = models.ForeignKey(VerboseUserDisplay, on_delete=models.CASCADE, related_name='guard_profile',
+    user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='guard_profile',
                              verbose_name='Аккаунт сотрудника', default=None, null=True, blank=False)
 
     @property
@@ -162,5 +153,5 @@ class Message(models.Model):
 
 
 class Device(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='device')
+    user = models.OneToOneField(AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='device')
     notification_token = models.CharField(max_length=255)

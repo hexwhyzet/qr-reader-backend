@@ -1,5 +1,5 @@
-from myapp.models import VerboseUserDisplay
+from django.contrib.auth import get_user_model
 
 
 def get_all_users():
-    return VerboseUserDisplay.objects.all()
+    return get_user_model().objects.all()

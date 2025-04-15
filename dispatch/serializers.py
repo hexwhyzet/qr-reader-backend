@@ -1,20 +1,8 @@
-from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from myapp.models import display_name
+from users.serializers import UserSerializer
 from .models import IncidentMessage, TextMessage, PhotoMessage, VideoMessage, AudioMessage, Incident, Duty, DutyRole, \
     DutyPoint
-
-
-class UserSerializer(serializers.ModelSerializer):
-    display_name = serializers.SerializerMethodField()
-
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'display_name']
-
-    def get_display_name(self, obj):
-        return display_name(obj)
 
 
 class DutyPointSerializer(serializers.ModelSerializer):
