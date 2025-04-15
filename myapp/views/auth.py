@@ -22,6 +22,7 @@ class UserInfo(APIView):
             'username': user.username,
             'groups': [group.name for group in user.groups.all()],
             'extra': extra,
+            'must_change_password': user.must_change_password,
         }
 
         return SuccessJsonResponse(data=content)

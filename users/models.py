@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.db import models
 
 
 def display_name(user):
@@ -12,6 +13,8 @@ def display_name(user):
 
 
 class User(AbstractUser):
+    must_change_password = models.BooleanField(default=False)
+
     class Meta:
         db_table = 'auth_user'
         ordering = ['last_name']

@@ -22,6 +22,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from dispatch.admin import dispatch_admin_site
 from myproject.settings import DEBUG
+from users.views import ChangePasswordView
 
 static_urlpatterns = [
     re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
@@ -35,5 +36,6 @@ urlpatterns = [
     path('api/dispatch/', include('dispatch.urls')),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/auth/change-password/', ChangePasswordView.as_view(), name='change-password'),
     path('', include(static_urlpatterns)),
 ]
