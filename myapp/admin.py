@@ -430,7 +430,7 @@ class CustomUserAdmin(UserAdmin):
         return custom_urls + urls
 
     def change_password(self, request, user_id):
-        user_to_change = AUTH_USER_MODEL.objects.get(pk=user_id)
+        user_to_change = get_user_model().objects.get(pk=user_id)
 
         if not (request.user.is_superuser or
                 request.user.groups.filter(name='senior_user_manager').exists() or
@@ -441,11 +441,11 @@ class CustomUserAdmin(UserAdmin):
             form = SetPasswordForm(user_to_change, request.POST)
             if form.is_valid():
                 form.save()
-                return redirect('admin:auth_user_change', user_id)
+                return redirect('admin:users_user_change', user_id)
         else:
             form = SetPasswordForm(user_to_change)
 
-        return render(request, 'admin/auth/user/change_password.html', {
+        return render(request, 'admin/users/user/change_password.html', {
             'form': form,
             'user_to_change': user_to_change,
         })
