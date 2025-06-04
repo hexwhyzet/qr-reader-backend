@@ -42,7 +42,10 @@ services:
           nginx -s reload;
           sleep 12h;
         done"
-
+#  Команда получения сертификата:
+#  certbot certonly --webroot \
+#  -w /var/www/certbot \
+#  -d appsostra.ru -d storage.appsostra.ru -d admin.appsostra.ru -d web.appsostra.ru
 
 
 volumes:
