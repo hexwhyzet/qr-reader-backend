@@ -25,7 +25,10 @@ SECRET_KEY = os.getenv('DJANGO_SECRET')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['10.0.2.2', 'localhost', '127.0.0.1', os.getenv('HOST'), 'localhost:8000']
+ALLOWED_HOSTS = [
+    '10.0.2.2', 'localhost', '127.0.0.1', os.getenv('HOST'), 'localhost:8000',
+    'appsostra.ru', 'admin.appsostra.ru', 'storage.appsostra.ru'
+]
 
 if DEBUG:
     ALLOWED_HOSTS = ['*']
@@ -178,6 +181,9 @@ SIMPLE_JWT = {  # Числа дефолтные, за ними нет смысл
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
     f'http://{os.getenv("HOST")}:8000',
+    'https://appsostra.ru',
+    'https://admin.appsostra.ru',
+    'https://storage.appsostra.ru',
 ]
 
 USE_X_FORWARDED_HOST = True
@@ -188,6 +194,7 @@ AWS_SECRET_ACCESS_KEY = os.getenv('S3_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = os.getenv('S3_STORAGE_BUCKET_NAME')
 AWS_S3_REGION_NAME = os.getenv('S3_REGION_NAME')
 AWS_S3_ENDPOINT_URL = f'https://storage.yandexcloud.net'
+AWS_S3_CUSTOM_DOMAIN = f'storage.appsostra.ru/{AWS_STORAGE_BUCKET_NAME}'
 AWS_S3_FILE_OVERWRITE = False
 AWS_S3_ADDRESSING_STYLE = "path"
 AWS_QUERYSTRING_AUTH = False

@@ -18,6 +18,9 @@ class DefaultS3MediaStorage(S3Boto3Storage):
     bucket_name = settings.AWS_STORAGE_BUCKET_NAME
     location = ''
 
+    def url(self, name):
+        return f"https://storage.appsostra.ru/{self.bucket_name}/{name}"
+
 
 def generate_six_digit_code():
     return f"{random.randint(100000, 999999)}"
