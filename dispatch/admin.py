@@ -193,8 +193,31 @@ class DutyAdmin(CustomAdmin):
 
 
 class IncidentAdmin(CustomAdmin):
-    list_display = ('name', 'author', 'created_at',)
+    list_display = ('name', 'incident_chat_action', 'author', 'created_at',)
     readonly_fields = ('created_at',)
+
+    def incident_chat_action(self, obj):
+        return format_html('<a class="button" style="color: green; background: none" href="{}">Открыть чат</a>',
+                           f'/admin/dispatch/incident/{obj.id}/chat/')
+
+    incident_chat_action.short_description = ''
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('<int:object_id>/chat/', self.admin_site.admin_view(self.incident_chat), name='incident-chat'),
+        ]
+        return custom_urls + urls
+
+    def incident_chat(self, request, object_id):
+        incident = Incident.objects.get(pk=object_id)
+
+        context = {
+            'incident': incident,
+        }
+
+        return render(request, 'admin/dispatch/incident.html', context)
+
 
 
 dispatch_admin_site = DispatchAdmin()

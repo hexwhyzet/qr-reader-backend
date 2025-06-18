@@ -1,0 +1,91 @@
+{% extends "admin/base_site.html" %}
+
+{% load static %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <style>
+        .page {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chat-container {
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-self: center;
+            max-width: 450px;
+            flex: 1;
+        }
+
+        .message {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meta {
+            font-size: 0.75rem;
+            color: #666;
+            margin-bottom: 2px;
+        }
+
+        .bubble {
+            padding: 0.6rem 0.8rem;
+            border-radius: 0.75rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+            background: #ffffff;
+            border: 1px solid #e1e1e1;
+            margin-bottom: 25px;
+            width: 100%;
+        }
+
+        .bubble img,
+        .bubble video {
+            max-width: 100%;
+            border-radius: 0.5rem;
+            display: block;
+        }
+
+        .bubble audio {
+            width: 100%;
+            outline: none;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="page">
+        <div class="chat-container">
+            {% for message in incident.messages.all %}
+
+                <div class="message {{ align_class }}">
+                    <div class="meta">
+                        <span class="author">{{ message.user.display_name|default:"Система" }}</span>
+                        •
+                        <span class="time">{{ message.created_at|date:"H:i d.m.Y" }}</span>
+                    </div>
+
+                    <div class="bubble">
+                        {% if message.message_type == "text" %}
+                            {{ message.text.text|linebreaksbr }}
+
+                        {% elif message.message_type == "photo" %}
+                            <img src="{{ message.content_object.photo.url }}" alt="Фото сообщения"/>
+
+                        {% elif message.message_type == "video" %}
+                            <video controls src="{{ message.content_object.video.url }}"></video>
+
+                        {% elif message.message_type == "audio" %}
+                            <audio controls src="{{ message.content_object.audio.url }}"></audio>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <p style="text-align:center; color:#777;">Сообщений пока нет.</p>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
