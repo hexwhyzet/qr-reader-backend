@@ -70,7 +70,7 @@ class GroupUserManagementForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.group = kwargs.pop('group', None)
         super().__init__(*args, **kwargs)
-        self.fields['add_user'].queryset = AUTH_USER_MODEL.objects.exclude(groups=self.group)
+        self.fields['add_user'].queryset = get_user_model().objects.exclude(groups=self.group)
 
     def save(self):
         new_group_user = self.cleaned_data['add_user']
@@ -384,7 +384,13 @@ class CustomUserAdmin(UserAdmin):
 
         if not request.user.is_superuser:
             return ((None, {'fields': ('username', 'first_name', 'last_name', 'is_staff', 'groups', 'must_change_password')}),)
-        return super().get_fieldsets(request, obj)
+        else:
+            fieldsets = list(super().get_fieldsets(request, obj))
+            first_fields = list(fieldsets[0][1]['fields'])
+            if 'must_change_password' not in first_fields:
+                first_fields.append('must_change_password')
+            fieldsets[0][1]['fields'] = tuple(first_fields)
+            return fieldsets
 
     def get_readonly_fields(self, request, obj=None):
         if not request.user.is_superuser and not is_senior_user_manager(request.user):
