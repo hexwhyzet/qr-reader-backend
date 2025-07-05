@@ -14,6 +14,7 @@ def display_name(user):
 
 class User(AbstractUser):
     must_change_password = models.BooleanField(default=False, verbose_name="Необходимо сменить пароль при следующем входе в приложение")
+    telegram_user_id = models.BigIntegerField(null=True, blank=True, unique=True, verbose_name="Telegram ID")
 
     class Meta:
         db_table = 'auth_user'
