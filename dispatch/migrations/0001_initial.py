@@ -114,7 +114,6 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('date', models.DateField(verbose_name='Дата дежурства')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='myapp.verboseuserdisplay', verbose_name='Аккаунт дежурного')),
                 ('role', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='dispatch.dutyrole', verbose_name='Роль дежурства')),
             ],
             options={

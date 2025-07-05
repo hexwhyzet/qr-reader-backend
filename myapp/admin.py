@@ -373,7 +373,7 @@ class CustomUserAdmin(UserAdmin):
             None,
             {
                 'classes': ('wide',),
-                'fields': ('username', 'password1', 'password2', 'first_name', 'last_name', 'is_staff', 'must_change_password'),
+                'fields': ('username', 'password1', 'password2', 'first_name', 'last_name', 'is_staff', 'must_change_password', 'telegram_user_id'),
             },
         ),
     )
@@ -383,18 +383,20 @@ class CustomUserAdmin(UserAdmin):
             return self.add_fieldsets
 
         if not request.user.is_superuser:
-            return ((None, {'fields': ('username', 'first_name', 'last_name', 'is_staff', 'groups', 'must_change_password')}),)
+            return ((None, {'fields': ('username', 'first_name', 'last_name', 'is_staff', 'groups', 'must_change_password', 'telegram_user_id')}),)
         else:
             fieldsets = list(super().get_fieldsets(request, obj))
             first_fields = list(fieldsets[0][1]['fields'])
             if 'must_change_password' not in first_fields:
                 first_fields.append('must_change_password')
+            if 'telegram_user_id' not in first_fields:
+                first_fields.append('telegram_user_id')
             fieldsets[0][1]['fields'] = tuple(first_fields)
             return fieldsets
 
     def get_readonly_fields(self, request, obj=None):
         if not request.user.is_superuser and not is_senior_user_manager(request.user):
-            return 'is_superuser', 'user_permissions', 'groups'
+            return 'is_superuser', 'user_permissions', 'groups', 'telegram_user_id'
         return super().get_readonly_fields(request, obj)
 
     def has_add_permission(self, request):
