@@ -25,8 +25,10 @@ SECRET_KEY = os.getenv('DJANGO_SECRET')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+HOST = os.getenv('HOST')
+
 ALLOWED_HOSTS = [
-    '10.0.2.2', 'localhost', '127.0.0.1', os.getenv('HOST'), 'localhost:8000',
+    '10.0.2.2', 'localhost', '127.0.0.1', HOST, 'localhost:8000',
     'appsostra.ru', 'admin.appsostra.ru', 'storage.appsostra.ru'
 ]
 
@@ -52,6 +54,7 @@ INSTALLED_APPS = [
     'food',
     'dispatch',
     'users',
+    'tg_bot',
 
     'django.contrib.admin',
 
@@ -200,3 +203,6 @@ AWS_S3_ADDRESSING_STYLE = "path"
 AWS_QUERYSTRING_AUTH = False
 
 AUTH_USER_MODEL = 'users.User'
+
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/tg_bot/link-telegram'
