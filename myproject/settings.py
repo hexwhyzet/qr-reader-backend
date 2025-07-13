@@ -26,6 +26,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET')
 DEBUG = True
 
 HOST = os.getenv('HOST')
+DOMAIN = 'https://appsostra.ru'
 
 ALLOWED_HOSTS = [
     '10.0.2.2', 'localhost', '127.0.0.1', HOST, 'localhost:8000',

@@ -23,7 +23,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await create_token_entry(token, telegram_user_id)
 
-    url = f"{settings.HOST}{reverse('link_telegram')}?token={token}"
+    url = f"{settings.DOMAIN}{reverse('link_telegram')}?token={token}"
 
     await update.message.reply_text(
         f"Привет! Для подключения уведомлений перейди по ссылке и войди в свой аккаунт:\n\n{url}"
