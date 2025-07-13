@@ -2,12 +2,22 @@ version: '3.8'
 
 services:
   django:
+    ports:
+      - "8000:8080"
     build: .
     command: gunicorn myproject.wsgi -c gunicorn.conf.py
     volumes:
       - .:/app
       - static_volume:/app/static
       - media_volume:/app/media
+    env_file:
+      - .env
+
+  tgbot:
+    build: .
+    command: python manage.py runbot
+    volumes:
+      - .:/app
     env_file:
       - .env
 
