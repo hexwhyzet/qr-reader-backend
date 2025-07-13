@@ -37,9 +37,11 @@ roles = {
     },
     UserManager: {
         'user': ALL_PERMISSIONS,
+        'device': ALL_PERMISSIONS,
     },
     SeniorUserManager: {
         'user': ALL_PERMISSIONS,
+        'device': ALL_PERMISSIONS,
     },
     CanteenManager: {
         'dish': [PermissionType.VIEW],
