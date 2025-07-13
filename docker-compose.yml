@@ -2,8 +2,6 @@ version: '3.8'
 
 services:
   django:
-    ports:
-      - "8000:8080"
     build: .
     command: gunicorn myproject.wsgi -c gunicorn.conf.py
     volumes:
