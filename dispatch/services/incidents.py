@@ -32,7 +32,7 @@ def escalate_incident(incident: Incident):
         incident.level = i
         incident.responsible_user = duty.user
         if incident.responsible_user is not None:
-            send_fcm_notification(incident.responsible_user, "Новый инцидент", incident.name)
+            send_fcm_notification(incident.responsible_user, f"Новый инцидент '{incident.name}' (Уровень {incident.level})", "Вам поручено разрешить инцидент, описанный в приложении: https://web.appsostra.ru")
         create_escalation_message(incident, i, duty)
         break
 
