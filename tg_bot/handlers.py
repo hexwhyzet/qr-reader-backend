@@ -26,7 +26,5 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     url = f"{settings.DOMAIN}{reverse('link_telegram')}?token={token}"
 
     await update.message.reply_text(
-        f"Привет! Для подключения уведомлений перейди по ссылке и войди в свой аккаунт:\n\n{url}",
-        parse_mode="HTML",
-        disable_web_page_preview=True
+        f"Привет! Для подключения уведомлений перейди по ссылке и войди в свой аккаунт:\n\n{url}"
     )

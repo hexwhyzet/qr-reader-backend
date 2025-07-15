@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from telegram import Bot
+from telegram.constants import ParseMode
 import os
 from django.conf import settings
 import asyncio
@@ -22,7 +23,12 @@ class Command(BaseCommand):
         bot = Bot(token=BOT_TOKEN)
 
         async def send():
-            await bot.send_message(chat_id=telegram_user_id, text=message)
+            await bot.send_message(
+                chat_id=telegram_user_id,
+                text=message,
+                parse_mode=ParseMode.HTML,
+                disable_web_page_preview=True
+            )
             self.stdout.write(
                 self.style.SUCCESS(f"Сообщение отправлено Telegram ID {telegram_user_id}")
             )
