@@ -1,5 +1,4 @@
 from telegram import Update
-from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 import secrets
 from django.utils import timezone
@@ -28,6 +27,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         f"Привет! Для подключения уведомлений перейди по ссылке и войди в свой аккаунт:\n\n{url}",
-        parse_mode=ParseMode.HTML,
+        parse_mode="HTML",
         disable_web_page_preview=True
     )
