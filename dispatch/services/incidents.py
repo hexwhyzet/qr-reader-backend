@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.db.models import Q
 
 from dispatch.models import Incident
@@ -32,7 +34,9 @@ def escalate_incident(incident: Incident):
         incident.level = i
         incident.responsible_user = duty.user
         if incident.responsible_user is not None:
-            send_fcm_notification(incident.responsible_user, f"Новый инцидент '{incident.name}' (Уровень {incident.level})", "Вам поручено разрешить инцидент, описанный в приложении: https://web.appsostra.ru")
+            send_fcm_notification(incident.responsible_user,
+                                  f"Новый инцидент '{incident.name}' (Уровень {incident.level})\n\nТочка: {incident.point.name}\nАвтор: {incident.author.display_name}\nВремя создания: {incident.created_at.strftime('%Y-%m-%d %H:%M:%S')}\nОписание: {incident.description}\n",
+                                  "Вам поручено разрешить инцидент, описанный в приложении: https://web.appsostra.ru")
         create_escalation_message(incident, i, duty)
         break
 

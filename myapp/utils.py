@@ -21,4 +21,4 @@ def send_fcm_notification(user: AUTH_USER_MODEL, title, body, data=None):
     #     )
     #     return result
     if user.telegram_user_id is not None:
-        telegram_notification(user.telegram_user_id, title + '\n' + body)
+        telegram_notification(user.telegram_user_id, title + '\n\n' + body)
