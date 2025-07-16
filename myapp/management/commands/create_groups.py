@@ -67,6 +67,11 @@ roles = {
         'dutyrole': ALL_PERMISSIONS,
         'dutypoint': ALL_PERMISSIONS,
         'exploitationrole': ALL_PERMISSIONS,
+        'incidentmessage': ALL_PERMISSIONS,
+        'textmessage': ALL_PERMISSIONS,
+        'photomessage': ALL_PERMISSIONS,
+        'videomessage': ALL_PERMISSIONS,
+        'audiomessage': ALL_PERMISSIONS,
     }
 }
 
