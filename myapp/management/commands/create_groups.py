@@ -44,15 +44,15 @@ roles = {
         'device': ALL_PERMISSIONS,
     },
     CanteenManager: {
-        'dish': [PermissionType.VIEW],
-        'alloweddish': [PermissionType.VIEW],
+        'dish': ALL_PERMISSIONS,
+        'alloweddish': ALL_PERMISSIONS,
         'order': [PermissionType.VIEW],
         'feedback': [PermissionType.VIEW]
     },
     CanteenAdminManager: {
         'dish': ALL_PERMISSIONS,
         'alloweddish': ALL_PERMISSIONS,
-        'order': [PermissionType.VIEW],
+        'order': ALL_PERMISSIONS,
         'feedback': [PermissionType.VIEW]
     },
     CanteenEmployee: {
