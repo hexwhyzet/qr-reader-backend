@@ -9,11 +9,24 @@ from food.permissions import CanAccessOrder, CanAccessOrderStats
 from food.services.order_statistics import OrderService
 
 
-class DishViewSet(viewsets.ReadOnlyModelViewSet):
+class DishViewSet(viewsets.ModelViewSet):
     queryset = Dish.objects.all()
     serializer_class = DishSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
-    
+
+    @action(detail=True, methods=['post'], url_path='upload-photo')
+    def upload_photo(self, request, pk=None):
+        instance = self.get_object()
+
+        photo = request.FILES.get('photo')
+        if not photo:
+            return Response({'error': 'No image provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        instance.photo = photo
+        instance.save()
+        return Response({'message': 'Image updated successfully'}, status=status.HTTP_200_OK)
+
+
 class AllowedDishViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = AllowedDishSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
