@@ -35,6 +35,7 @@ class OrderSerializer(serializers.ModelSerializer):
     def validate(self, data):
         cooking_time = data.get('cooking_time', None)
         dish = data.get('dish', None)
+        user = data.get('user', None)
 
         if cooking_time:
             self.validate_cooking_time(cooking_time)
@@ -45,6 +46,16 @@ class OrderSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError(
                         f"Блюдо '{dish.name}' недоступно для заказа на {cooking_time}."
                     )
+                    
+        if Order.objects.filter(
+            user=user,
+            cooking_time=cooking_time,
+            is_deleted=False,
+            dish__category=dish.category
+        ).exists():
+            raise serializers.ValidationError(
+                f"Уже заказано блюдо категории {dish.get_category_display()} на {cooking_time}"
+            )
 
         return data
 
