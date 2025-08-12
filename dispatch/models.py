@@ -59,7 +59,7 @@ class DutyPoint(models.Model):
     admins = models.ManyToManyField(AUTH_USER_MODEL, related_name='admin_duty_points', verbose_name='Ответственные лица')
 
     class Meta:
-        verbose_name = "Система дежурств"
+        verbose_name = "Система дежурства"
         verbose_name_plural = "Системы дежурств"
 
     def __str__(self):
@@ -126,7 +126,7 @@ class Incident(models.Model):
     responsible_user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
                                          related_name='responsible_incidents', verbose_name='Ответственный дежурный')
     point = models.ForeignKey(DutyPoint, on_delete=models.SET_NULL, null=True, related_name='incidents',
-                              verbose_name='Точка диспетчеризации')
+                              verbose_name='Система дежурства')
     created_at = models.DateTimeField(auto_now_add=True)
 
     is_accepted = models.BooleanField(default=False, verbose_name='Необходимо открыть дежурство ответсвенному в приложении')
