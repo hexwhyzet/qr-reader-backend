@@ -60,7 +60,7 @@ class DutyPoint(models.Model):
 
     class Meta:
         verbose_name = "Система дежурств"
-        verbose_name_plural = "Система дежурств"
+        verbose_name_plural = "Системы дежурств"
 
     def __str__(self):
         return f"{self.name}"
