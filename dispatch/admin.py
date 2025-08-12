@@ -219,12 +219,15 @@ class IncidentAdmin(CustomAdmin):
         return render(request, 'admin/dispatch/incident.html', context)
 
 
+class DutyPointAdmin(CustomAdmin):
+    filter_horizontal = ('admins',)
+
 
 dispatch_admin_site = DispatchAdmin()
 
 
 def register_dispatch_admin(site):
-    site.register(DutyPoint)
+    site.register(DutyPoint, DutyPointAdmin)
     site.register(ExploitationRole, ExploitationRoleAdmin)
     site.register(DutyRole, DutyRoleAdmin)
     site.register(Duty, DutyAdmin)
