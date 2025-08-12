@@ -1,10 +1,9 @@
-from datetime import datetime
-
 from django.db.models import Q
 
 from dispatch.models import Incident
 from dispatch.services.duties import get_current_duties
 from dispatch.services.messages import create_escalation_error_message_duty_not_opened, create_escalation_message
+from dispatch.services.notification import notify_point_admins
 from dispatch.utils import now
 from myapp.admin import user_has_group
 from myapp.custom_groups import DispatchAdminManager
@@ -33,10 +32,12 @@ def escalate_incident(incident: Incident):
             continue
         incident.level = i
         incident.responsible_user = duty.user
+        incident.is_accepted = False
         if incident.responsible_user is not None:
-            send_fcm_notification(incident.responsible_user,
-                                  f"Новый инцидент <b>{incident.name}</b> (Уровень {incident.level})\n\nТочка: {incident.point.name}\nАвтор: {incident.author.display_name}\nВремя создания: {incident.created_at.strftime('%Y-%m-%d %H:%M:%S')}\nОписание: {incident.description}\n",
-                                  "Вам поручено разрешить инцидент, описанный в приложении: https://web.appsostra.ru")
+            send_fcm_notification(incident.responsible_user, incident.name,
+                                  f"Вам поручен инцидент на точке {incident.point.name}")
+            notify_point_admins(incident.point, incident.name,
+                                f"Инцидент был повышен до уровня {incident.level}")
         create_escalation_message(incident, i, duty)
         break
 

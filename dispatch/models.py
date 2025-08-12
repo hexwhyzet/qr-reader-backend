@@ -46,7 +46,7 @@ class ExploitationRole(models.Model):
 
 
 class DutyPoint(models.Model):
-    name = models.CharField(max_length=100, verbose_name='Имя точки дежурства')
+    name = models.CharField(max_length=150, verbose_name='Имя системы дежурств')
     level_0_role = models.ForeignKey(ExploitationRole, on_delete=models.SET_NULL, null=True, blank=True,
                                      verbose_name='Эксплуатирующий персонал (уровень 0)', related_name='level_0_role')
     level_1_role = models.ForeignKey(DutyRole, on_delete=models.SET_NULL, null=True, blank=True,
@@ -56,9 +56,11 @@ class DutyPoint(models.Model):
     level_3_role = models.ForeignKey(DutyRole, on_delete=models.SET_NULL, null=True, blank=True,
                                      verbose_name='Дежурный уровня 3', related_name='level_3_role')
 
+    admins = models.ManyToManyField(AUTH_USER_MODEL, related_name='admin_duty_points', verbose_name='Ответственные лица')
+
     class Meta:
-        verbose_name = "Точка диспетчеризации"
-        verbose_name_plural = "Точки диспетчеризации"
+        verbose_name = "Система дежурств"
+        verbose_name_plural = "Система дежурств"
 
     def __str__(self):
         return f"{self.name}"
@@ -68,12 +70,16 @@ class Duty(models.Model):
     user = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='Аккаунт дежурного')
     role = models.ForeignKey(DutyRole, on_delete=models.CASCADE, null=True, verbose_name='Роль дежурства')
     is_opened = models.BooleanField(default=False, verbose_name='Открыт ли')
+    is_forced_opened = models.BooleanField(default=False, verbose_name='Открыт ли автоматически')
 
     start_datetime = models.DateTimeField(verbose_name='Начало дежурства', null=False, blank=False)
     end_datetime = models.DateTimeField(verbose_name='Окончание дежурства', null=False, blank=False)
 
+    # Нотификация о том, что у человека сегодня будет дежурство
+    notification_duty_is_coming = models.ForeignKey("Notification", on_delete=models.SET_NULL, null=True, blank=True, related_name="duty_is_coming")
+
     # Нотификация о том, что ответственный человек не принял дежурство
-    notification_need_to_open = models.ForeignKey("Notification", on_delete=models.SET_NULL, null=True, blank=True)
+    notification_need_to_open = models.ForeignKey("Notification", on_delete=models.SET_NULL, null=True, blank=True, related_name="need_to_open")
 
     class Meta:
         verbose_name = "Дежурство"
@@ -122,6 +128,8 @@ class Incident(models.Model):
     point = models.ForeignKey(DutyPoint, on_delete=models.SET_NULL, null=True, related_name='incidents',
                               verbose_name='Точка диспетчеризации')
     created_at = models.DateTimeField(auto_now_add=True)
+
+    is_accepted = models.BooleanField(default=False, verbose_name='Необходимо открыть дежурство ответсвенному в приложении')
 
     class Meta:
         verbose_name = "Инцидент"

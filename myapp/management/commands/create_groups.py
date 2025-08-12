@@ -11,7 +11,9 @@ from myapp.custom_groups import (
     SeniorUserManager,
     CanteenManager,
     CanteenEmployee,
-    CanteenAdminManager, DispatchAdminManager
+    CanteenAdminManager,
+    DispatchAdminManager,
+    DispatchSuperViewer
 )
 
 
@@ -72,6 +74,18 @@ roles = {
         'photomessage': ALL_PERMISSIONS,
         'videomessage': ALL_PERMISSIONS,
         'audiomessage': ALL_PERMISSIONS,
+    },
+    DispatchSuperViewer: {
+        'incident': PermissionType.VIEW,
+        'duty': PermissionType.VIEW,
+        'dutyrole': PermissionType.VIEW.VIEW,
+        'dutypoint': PermissionType.VIEW,
+        'exploitationrole': PermissionType.VIEW,
+        'incidentmessage': PermissionType.VIEW,
+        'textmessage': PermissionType.VIEW,
+        'photomessage': PermissionType.VIEW,
+        'videomessage': PermissionType.VIEW,
+        'audiomessage': PermissionType.VIEW,
     }
 }
 

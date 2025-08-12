@@ -32,8 +32,8 @@ def get_duties_assigned(start_date: date, duty_role: DutyRole):
     return counter
 
 
-def get_current_duties(current_datetime, user: AUTH_USER_MODEL = None, role: DutyRole = None):
-    START_OFFSET = timedelta(minutes=15)
+def get_current_duties(current_datetime, user: AUTH_USER_MODEL = None, role: DutyRole = None, start_offset: int = 15):
+    START_OFFSET = timedelta(minutes=start_offset)
 
     queryset = Duty.objects.filter(start_datetime__lte=current_datetime + START_OFFSET,
                                    end_datetime__gt=current_datetime)
@@ -59,7 +59,7 @@ def get_duty_point_by_exploitation_role(exploitation_role: ExploitationRole):
 
 
 def get_duty_point_by_duty_role(duty_role: DutyRole):
-    return DutyPoint.objects.filter(Q(level_1_role=duty_role) | Q(level_2_role=duty_role) | Q(level_3_role=duty_role))
+    return DutyPoint.objects.filter(Q(level_1_role=duty_role) | Q(level_2_role=duty_role) | Q(level_3_role=duty_role)).all()
 
 
 def get_or_create_duty(duty_date: date, role: DutyRole, defaults):

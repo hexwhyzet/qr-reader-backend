@@ -34,11 +34,21 @@ def create_escalation_message(incident: Incident, to_level: int, new_responsible
     return create_system_message(incident, message)
 
 
-def create_close_escalation_message(incident: Incident, duty: Duty):
-    message = f"Инцидент был закрыт пользователем {duty}."
+def create_close_escalation_message(incident: Incident, user: AUTH_USER_MODEL):
+    message = f"Инцидент был закрыт пользователем {user.display_name}."
     return create_system_message(incident, message)
 
 
 def create_force_close_escalation_message(incident: Incident, user: AUTH_USER_MODEL):
-    message = f"Инцидент был принудительно закрыт пользователем {user}."
+    message = f"Инцидент был принудительно закрыт пользователем {user.display_name}."
+    return create_system_message(incident, message)
+
+
+def create_reopen_escalation_message(incident: Incident, user: AUTH_USER_MODEL):
+    message = f"Инцидент был переоткрыт пользователем {user.display_name}."
+    return create_system_message(incident, message)
+
+
+def create_incident_acceptance_message(incident: Incident, user: AUTH_USER_MODEL):
+    message = f"Инцидент был принят пользователем {user.display}."
     return create_system_message(incident, message)

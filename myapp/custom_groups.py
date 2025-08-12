@@ -42,3 +42,7 @@ class CanteenEmployee(CustomGroup):
 class DispatchAdminManager(CustomGroup):
     name = "dispatch_admin_manager"
     verbose_name = "Dispatch Admin"
+
+class DispatchSuperViewer(CustomGroup):
+    name = "dispatch_super_viewer"
+    verbose_name = "Dispatch Super Viewer"

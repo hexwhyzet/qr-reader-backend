@@ -16,8 +16,11 @@ from .models import IncidentMessage, Incident, IncidentStatusEnum
 from .serializers import TextMessageSerializer, PhotoMessageSerializer, VideoMessageSerializer, \
     AudioMessageSerializer, IncidentSerializer, DutySerializer, DutyPointSerializer, IncidentMessageSerializer
 from .services.duties import get_duties_by_date, get_current_duties, get_all_duties, get_duty_by_id, \
-    get_related_duty_points
+    get_related_duty_points, get_duty_point_by_duty_role
 from .services.incidents import escalate_incident, user_incidents
+from .services.messages import create_incident_acceptance_message, create_close_escalation_message, \
+    create_force_close_escalation_message, create_reopen_escalation_message
+from .services.notification import notify_point_admins
 from .utils import now
 
 
@@ -68,7 +71,7 @@ class IncidentViewSet(viewsets.ViewSet):
 
         response = []
 
-        if incident.responsible_user == request.user or user_has_group(request.user, DispatchAdminManager):
+        if (incident.responsible_user == request.user and incident.is_accepted) or user_has_group(request.user, DispatchAdminManager):
             if incident.status != IncidentStatusEnum.OPENED.value:
                 response.append(IncidentStatusEnum.OPENED.value)
             if incident.status != IncidentStatusEnum.CLOSED.value:
@@ -101,6 +104,13 @@ class IncidentViewSet(viewsets.ViewSet):
         incident.status = new_status
         incident.save()
 
+        if new_status == "closed":
+            create_close_escalation_message(incident, request.user)
+        elif new_status == "force_closed":
+            create_force_close_escalation_message(incident, request.user)
+        elif new_status == "opened":
+            create_reopen_escalation_message(incident, request.user)
+
         serializer = IncidentSerializer(incident)
         return Response(serializer.data)
 
@@ -121,6 +131,20 @@ class IncidentViewSet(viewsets.ViewSet):
         incidents = user_incidents(request.user)
 
         serializer = IncidentSerializer(incidents, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["post"])
+    def accept(self, request, pk=None):
+        incident = Incident.objects.get(pk=pk)
+
+        if incident.responsible_user != request.user:
+            return Response({"error": "Вы не являетесь ответственным за этот инцидент"}, status=403)
+
+        incident.is_accepted = True
+
+        create_incident_acceptance_message(incident, request.user)
+
+        serializer = IncidentSerializer(incident)
         return Response(serializer.data)
 
 
@@ -167,7 +191,14 @@ class DutyViewSet(viewsets.ReadOnlyModelViewSet):  # ReadOnly since no update/cr
             return Response({"error": "Передать дежурство может только сам дежурный"}, status=403)
 
         new_user_id = request.data.get("user_id")
-        if new_user_id is None or not get_user_model().objects.filter(pk=new_user_id).exists():
+
+        if new_user_id == 0:
+            for point in get_duty_point_by_duty_role(duty.role):
+                notify_point_admins(point, f"{duty.user.display_name} не может выйти на дежурство",
+                                    f"Необходимо найти замену для {duty.role.name} на системе дежурств {point.name}. Причина пользователя: {request.data.get('user_reason')}")
+                return Response(status=204)
+
+        if not get_user_model().objects.filter(pk=new_user_id).exists():
             return Response({"error": "Поле user_id в теле запроса некорректное"}, status=403)
 
         duty.user = get_user_model().objects.get(pk=new_user_id)
@@ -175,6 +206,11 @@ class DutyViewSet(viewsets.ReadOnlyModelViewSet):  # ReadOnly since no update/cr
 
         serializer = DutySerializer(duty)
         send_fcm_notification(duty.user, "Вам передано дежурство", f"{duty.user} передал вам дежурство")
+
+        for point in get_duty_point_by_duty_role(duty.role):
+            notify_point_admins(point, f"{request.user.display_name} не может выйти на дежурство",
+                                f"{request.user.display_name} передал {duty.user.display_name} дежурство {duty.role.name} на системе дежурств {point.name}. Причина пользователя: {request.data.get('user_reason')}")
+
         return Response(serializer.data)
 
 
