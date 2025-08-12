@@ -17,6 +17,7 @@ class Dish(models.Model):
         ('side_dish', 'Гарнир'),
         ('main_course', 'Второе блюдо'),
         ('salad', 'Салат'),
+        ('drink', 'Напиток')
     ]
     name = models.CharField(max_length=255, verbose_name='Название блюда')
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, verbose_name='Тип блюда')
