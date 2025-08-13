@@ -71,7 +71,7 @@ class IncidentViewSet(viewsets.ViewSet):
 
         response = []
 
-        if (incident.responsible_user == request.user and incident.is_accepted) or user_has_group(request.user, DispatchAdminManager):
+        if (incident.responsible_user == request.user and incident.status != IncidentStatusEnum.WAITING_TO_BE_ACCEPTED) or user_has_group(request.user, DispatchAdminManager):
             if incident.status != IncidentStatusEnum.OPENED.value:
                 response.append(IncidentStatusEnum.OPENED.value)
             if incident.status != IncidentStatusEnum.CLOSED.value:
@@ -95,7 +95,7 @@ class IncidentViewSet(viewsets.ViewSet):
 
         new_status = request.data.get("status")
 
-        if new_status not in ["opened", "closed", "force_closed"]:
+        if new_status not in [e.value for e in IncidentStatusEnum]:
             return Response({"error": "Некорректный статус"}, status=400)
 
         if new_status in ["force_closed"] and not user_has_group(request.user, DispatchAdminManager):
@@ -109,7 +109,10 @@ class IncidentViewSet(viewsets.ViewSet):
         elif new_status == "force_closed":
             create_force_close_escalation_message(incident, request.user)
         elif new_status == "opened":
-            create_reopen_escalation_message(incident, request.user)
+            if incident.status in [IncidentStatusEnum.FORCE_CLOSED.value, IncidentStatusEnum.CLOSED.value]:
+                create_reopen_escalation_message(incident, request.user)
+            else:
+                create_incident_acceptance_message(incident, request.user)
 
         serializer = IncidentSerializer(incident)
         return Response(serializer.data)
@@ -131,20 +134,6 @@ class IncidentViewSet(viewsets.ViewSet):
         incidents = user_incidents(request.user)
 
         serializer = IncidentSerializer(incidents, many=True)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=["post"])
-    def accept(self, request, pk=None):
-        incident = Incident.objects.get(pk=pk)
-
-        if incident.responsible_user != request.user:
-            return Response({"error": "Вы не являетесь ответственным за этот инцидент"}, status=403)
-
-        incident.is_accepted = True
-
-        create_incident_acceptance_message(incident, request.user)
-
-        serializer = IncidentSerializer(incident)
         return Response(serializer.data)
 
 

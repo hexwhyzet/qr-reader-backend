@@ -1,4 +1,3 @@
-import logging
 from datetime import timedelta
 
 from django_cron import CronJobBase, Schedule
@@ -6,8 +5,6 @@ from django_cron import CronJobBase, Schedule
 from dispatch.services.duties import get_current_duties, get_duty_point_by_duty_role
 from dispatch.services.notification import create_and_notify, notify_point_admins
 from dispatch.utils import now
-
-logger = logging.getLogger(__name__)
 
 
 class NeedToOpenNotification(CronJobBase):

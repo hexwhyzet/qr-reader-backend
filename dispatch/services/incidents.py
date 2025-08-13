@@ -1,6 +1,6 @@
 from django.db.models import Q
 
-from dispatch.models import Incident
+from dispatch.models import Incident, IncidentStatusEnum
 from dispatch.services.duties import get_current_duties
 from dispatch.services.messages import create_escalation_error_message_duty_not_opened, create_escalation_message
 from dispatch.services.notification import notify_point_admins
@@ -32,7 +32,7 @@ def escalate_incident(incident: Incident):
             continue
         incident.level = i
         incident.responsible_user = duty.user
-        incident.is_accepted = False
+        incident.status = IncidentStatusEnum.WAITING_TO_BE_ACCEPTED.value
         if incident.responsible_user is not None:
             send_fcm_notification(incident.responsible_user, incident.name,
                                   f"Вам поручен инцидент на точке {incident.point.name}")

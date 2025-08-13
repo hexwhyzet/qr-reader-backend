@@ -50,5 +50,5 @@ def create_reopen_escalation_message(incident: Incident, user: AUTH_USER_MODEL):
 
 
 def create_incident_acceptance_message(incident: Incident, user: AUTH_USER_MODEL):
-    message = f"Инцидент был принят пользователем {user.display}."
+    message = f"Инцидент был принят пользователем {user.display_name}."
     return create_system_message(incident, message)

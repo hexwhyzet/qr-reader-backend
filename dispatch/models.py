@@ -105,6 +105,7 @@ class IncidentStatusEnum(enum.Enum):
     OPENED = 'opened'
     CLOSED = 'closed'
     FORCE_CLOSED = 'force_closed'
+    WAITING_TO_BE_ACCEPTED = 'waiting_to_be_accepted'
 
 
 class Incident(models.Model):
@@ -112,11 +113,12 @@ class Incident(models.Model):
         (IncidentStatusEnum.OPENED.value, 'В работе'),
         (IncidentStatusEnum.CLOSED.value, 'Выполнено'),
         (IncidentStatusEnum.FORCE_CLOSED.value, 'Ненадлежащее выполнение'),
+        (IncidentStatusEnum.WAITING_TO_BE_ACCEPTED.value, 'В ожидании принятия'),
     ]
 
     name = models.CharField(max_length=255, verbose_name='Имя инцидента')
     description = models.TextField(verbose_name='Описание инцидента')
-    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='opened', verbose_name='Статус')
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='opened', verbose_name='Статус')
     level = models.PositiveSmallIntegerField(default=0, verbose_name='Уровень')
     is_critical = models.BooleanField(default=False, verbose_name='Критичный',
                                       help_text='Автоматически выставляется, если ни один из уровней не справился с выполнением')
@@ -127,9 +129,9 @@ class Incident(models.Model):
                                          related_name='responsible_incidents', verbose_name='Ответственный дежурный')
     point = models.ForeignKey(DutyPoint, on_delete=models.SET_NULL, null=True, related_name='incidents',
                               verbose_name='Система дежурства')
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Время создания')
 
-    is_accepted = models.BooleanField(default=False, verbose_name='Необходимо открыть дежурство ответсвенному в приложении')
+    # is_accepted = models.BooleanField(default=False, verbose_name='Необходимо открыть дежурство ответсвенному в приложении')
 
     class Meta:
         verbose_name = "Инцидент"
@@ -146,7 +148,7 @@ class Notification(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, null=True)
 
     def __str__(self):
-        return f"Уведомление для {self.user} - {'Отправлено' if self.is_sent else 'Не отправлено'}"
+        return f"Уведомление для {self.user}"
 
 
 class IncidentMessage(models.Model):

@@ -189,11 +189,11 @@ class DutyRoleAdmin(CustomAdmin):
 
 
 class DutyAdmin(CustomAdmin):
-    exclude = ('notification_need_to_open',)
+    exclude = ('notification_need_to_open', 'notification_duty_is_coming')
 
 
 class IncidentAdmin(CustomAdmin):
-    list_display = ('name', 'incident_chat_action', 'author', 'created_at',)
+    list_display = ('name', 'incident_chat_action', 'author', 'status', 'level', 'created_at',)
     readonly_fields = ('created_at',)
 
     def incident_chat_action(self, obj):
