@@ -13,6 +13,8 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+# from rest_framework_nested.runtests.settings import MIDDLEWARE_CLASSES
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -92,6 +94,11 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# if DEBUG:
+#     MIDDLEWARE.append(
+#         'core.middleware.LogRequestsMiddleware',
+#     )
 
 ROOT_URLCONF = 'myproject.urls'
 
@@ -190,7 +197,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {  # Числа дефолтные, за ними нет смысла
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=180), # experiment
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
     'SLIDING_TOKEN_LIFETIME': timedelta(days=30),
     'SLIDING_TOKEN_REFRESH_LIFETIME_LATE_USER': timedelta(days=1),
