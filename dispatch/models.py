@@ -48,7 +48,7 @@ class ExploitationRole(models.Model):
 class DutyPoint(models.Model):
     name = models.CharField(max_length=150, verbose_name='Имя системы дежурств')
     level_0_role = models.ForeignKey(ExploitationRole, on_delete=models.SET_NULL, null=True, blank=True,
-                                     verbose_name='Эксплуатирующий персонал (уровень 0)', related_name='level_0_role')
+                                     verbose_name='Персонал, вызывающий дежурного (уровень 0)', related_name='level_0_role')
     level_1_role = models.ForeignKey(DutyRole, on_delete=models.SET_NULL, null=True, blank=True,
                                      verbose_name='Дежурный уровня 1', related_name='level_1_role')
     level_2_role = models.ForeignKey(DutyRole, on_delete=models.SET_NULL, null=True, blank=True,
