@@ -24,7 +24,7 @@ def send_fcm_notification(user: AUTH_USER_MODEL, title, body, data=None):
                 fcm_token=user.device.notification_token,
                 notification_title=title,
                 notification_body=body,
-                data_payload=True,  # для воспроизведения звука уведомления
+                webpush_config={"notification": {"sound": "default"}}
             )
             return result
         except Exception as e:

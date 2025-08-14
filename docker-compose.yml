@@ -4,12 +4,16 @@ services:
   django:
     build: .
     command: gunicorn myproject.wsgi -c gunicorn.conf.py
+#    ports:
+#      - "8001:8080"
     volumes:
       - .:/app
       - static_volume:/app/static
       - media_volume:/app/media
     env_file:
       - .env
+    environment:
+      ENABLE_CRON: "1"
 
   tgbot:
     build: .
@@ -18,6 +22,8 @@ services:
       - .:/app
     env_file:
       - .env
+    environment:
+      ENABLE_CRON: "0"
 
   nginx:
     image: nginx:latest

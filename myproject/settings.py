@@ -33,6 +33,15 @@ ALLOWED_HOSTS = [
     'appsostra.ru', 'admin.appsostra.ru', 'storage.appsostra.ru'
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://localhost',
+    'https://127.0.0.1',
+    'https://appsostra.ru',
+    'https://web.appsostra.ru',
+    'https://admin.appsostra.ru',
+]
+CORS_ALLOW_ALL_ORIGINS = True
+
 if DEBUG:
     ALLOWED_HOSTS = ['*']
 
@@ -59,13 +68,19 @@ INSTALLED_APPS = [
 
     'django.contrib.admin',
 
-    'django_cron',
+    'django_crontab',
 ]
 
-CRON_CLASSES = [
-    'corsheaders'
-    'dispatch.crons.NeedToOpenNotification',
+CRONJOBS = [
+    ("* * * * *", "dispatch.crons.need_to_open_notification", ">> /var/log/cron.log 2>&1"),
 ]
+
+CRONTAB_COMMAND_PREFIX = (
+    ". /app/.env; "
+    "DJANGO_SETTINGS_MODULE=myproject.settings "
+    "PYTHONPATH=/app "
+    "PATH=/usr/local/bin:/usr/bin:/bin"
+)
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
