@@ -114,8 +114,11 @@ class IncidentViewSet(viewsets.ViewSet):
         elif new_status == "opened":
             if incident.status in [IncidentStatusEnum.FORCE_CLOSED.value, IncidentStatusEnum.CLOSED.value]:
                 create_reopen_escalation_message(incident, request.user)
-            else:
-                create_incident_acceptance_message(incident, request.user)
+            elif incident.status in [IncidentStatusEnum.WAITING_TO_BE_ACCEPTED.value]:
+                if incident.responsible_user == request.user:
+                    create_incident_acceptance_message(incident, request.user)
+                else:
+                    return Response({"error": "Принять инцидент может только ответственный"}, status=403)
 
         serializer = IncidentSerializer(incident)
         return Response(serializer.data)
