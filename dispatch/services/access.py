@@ -23,4 +23,4 @@ def dispatch_admins():
 
 
 def has_dispatch_admin_rights(user: AUTH_USER_MODEL, point: DutyPoint = None):
-    return user_has_group(user, DispatchAdminManager.name) or point.admins.contains(user)
+    return user_has_group(user, DispatchAdminManager.name) or (point is not None and point.admins.contains(user))
