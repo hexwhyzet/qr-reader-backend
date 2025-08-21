@@ -189,7 +189,10 @@ class DutyRoleAdmin(CustomAdmin):
 
 
 class DutyAdmin(CustomAdmin):
-    exclude = ('notification_need_to_open', 'notification_duty_is_coming')
+    def get_exclude(self, request, obj=None):
+        if request.user.is_superuser:
+            return None
+        return ('notification_need_to_open', 'notification_duty_is_coming')
 
 
 class IncidentAdmin(CustomAdmin):

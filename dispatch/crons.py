@@ -11,17 +11,14 @@ def need_to_open_notification():
 
     duties = get_current_duties(now(), start_offset=30)
 
-    print(len(duties))
-
     for duty in duties:
+        print(duty)
         if not duty.is_opened and duty.notification_duty_is_coming is None:
             title = "Вам назначено дежурство сегодня"
             text = f"Дежурство в роли: {duty.role.name}"
             duty.notification_duty_is_coming = create_and_notify(duty.user, title, text)
             duty.save()
 
-        print(not duty.is_opened, duty.notification_need_to_open is None,
-              now() - duty.start_datetime > timedelta(minutes=15))
         if (not duty.is_opened and duty.notification_need_to_open is None
                 and now() - duty.start_datetime > timedelta(minutes=15)):
             duty.is_opened = True

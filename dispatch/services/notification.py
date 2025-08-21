@@ -26,7 +26,7 @@ def notify_users(users, title, text):
 
 
 def notify_point_admins(point, title, text):
-    notify_users(chain(point.admins.all(), dispatch_admins()), title, text)
+    notify_users({u for u in chain(point.admins.all(), dispatch_admins())}, title, text)
 
 
 def notify_admins(title, text):

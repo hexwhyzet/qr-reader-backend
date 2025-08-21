@@ -48,4 +48,5 @@ def user_incidents(user: AUTH_USER_MODEL):
     if user_has_group(user, DispatchAdminManager):
         return Incident.objects.all()
 
-    return Incident.objects.filter(Q(author_id=user.id) | Q(responsible_user_id=user.id)).all()
+    return Incident.objects.filter(
+        Q(author_id=user.id) | Q(responsible_user_id=user.id) | Q(point__admins=user.id)).all()

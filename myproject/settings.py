@@ -70,19 +70,8 @@ INSTALLED_APPS = [
 
     'django.contrib.admin',
 
-    'django_crontab',
+    'django_apscheduler',
 ]
-
-CRONJOBS = [
-    ("* * * * *", "dispatch.crons.need_to_open_notification", ">> /var/log/cron.log 2>&1"),
-]
-
-CRONTAB_COMMAND_PREFIX = (
-    ". /app/.env; "
-    "DJANGO_SETTINGS_MODULE=myproject.settings "
-    "PYTHONPATH=/app "
-    "PATH=/usr/local/bin:/usr/bin:/bin"
-)
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',

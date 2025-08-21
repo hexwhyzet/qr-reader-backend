@@ -9,12 +9,11 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import SAFE_METHODS, BasePermission, IsAuthenticated
 from rest_framework.response import Response
 
-from myapp.admin import user_has_group
-from myapp.custom_groups import DispatchAdminManager
 from myapp.utils import send_fcm_notification
 from .models import IncidentMessage, Incident, IncidentStatusEnum
 from .serializers import TextMessageSerializer, PhotoMessageSerializer, VideoMessageSerializer, \
     AudioMessageSerializer, IncidentSerializer, DutySerializer, DutyPointSerializer, IncidentMessageSerializer
+from .services.access import has_dispatch_admin_rights
 from .services.duties import get_duties_by_date, get_current_duties, get_all_duties, get_duty_by_id, \
     get_related_duty_points, get_duty_point_by_duty_role
 from .services.incidents import escalate_incident, user_incidents
@@ -69,9 +68,11 @@ class IncidentViewSet(viewsets.ViewSet):
     def available_actions(self, request, pk=None):
         incident = Incident.objects.get(pk=pk)
 
+        is_admin = has_dispatch_admin_rights(request.user, incident.point)
+
         response = []
 
-        if (incident.responsible_user == request.user and incident.status != IncidentStatusEnum.WAITING_TO_BE_ACCEPTED) or user_has_group(request.user, DispatchAdminManager):
+        if (incident.responsible_user == request.user and incident.status != IncidentStatusEnum.WAITING_TO_BE_ACCEPTED) or is_admin:
             if incident.status != IncidentStatusEnum.OPENED.value:
                 response.append(IncidentStatusEnum.OPENED.value)
             if incident.status != IncidentStatusEnum.CLOSED.value:
@@ -80,7 +81,7 @@ class IncidentViewSet(viewsets.ViewSet):
             if incident.level < 4:
                 response.append("escalate")
 
-            if user_has_group(request.user, DispatchAdminManager):
+            if is_admin:
                 if incident.status != IncidentStatusEnum.FORCE_CLOSED.value:
                     response.append(IncidentStatusEnum.FORCE_CLOSED.value)
 
@@ -90,7 +91,9 @@ class IncidentViewSet(viewsets.ViewSet):
     def change_status(self, request, pk=None):
         incident = Incident.objects.get(pk=pk)
 
-        if incident.responsible_user != request.user and not user_has_group(request.user, DispatchAdminManager):
+        is_admin = has_dispatch_admin_rights(request.user, incident.point)
+
+        if incident.responsible_user != request.user and not is_admin:
             return Response({"error": "Вы не являетесь ответственным за этот инцидент"}, status=403)
 
         new_status = request.data.get("status")
@@ -98,7 +101,7 @@ class IncidentViewSet(viewsets.ViewSet):
         if new_status not in [e.value for e in IncidentStatusEnum]:
             return Response({"error": "Некорректный статус"}, status=400)
 
-        if new_status in ["force_closed"] and not user_has_group(request.user, DispatchAdminManager):
+        if new_status in ["force_closed"] and not is_admin:
             return Response({"error": "Принудительно закрыть может только dispatch_admin_manager"}, status=400)
 
         incident.status = new_status
@@ -121,7 +124,9 @@ class IncidentViewSet(viewsets.ViewSet):
     def escalate(self, request, pk=None):
         incident = Incident.objects.get(pk=pk)
 
-        if incident.responsible_user != request.user and not user_has_group(request.user, DispatchAdminManager):
+        is_admin = has_dispatch_admin_rights(request.user, incident.point)
+
+        if incident.responsible_user != request.user and not is_admin:
             return Response({"error": "Вы не являетесь ответственным за этот инцидент"}, status=403)
 
         escalate_incident(incident)
