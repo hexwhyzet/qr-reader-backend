@@ -199,6 +199,8 @@ class DutyViewSet(viewsets.ReadOnlyModelViewSet):  # ReadOnly since no update/cr
             return Response({"error": "Поле user_id в теле запроса некорректное"}, status=403)
 
         duty.user = get_user_model().objects.get(pk=new_user_id)
+        duty.notification_duty_is_coming = None
+        duty.notification_need_to_open = None
         duty.save()
 
         serializer = DutySerializer(duty)
