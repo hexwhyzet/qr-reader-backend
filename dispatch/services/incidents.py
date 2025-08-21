@@ -11,11 +11,11 @@ from myapp.utils import send_fcm_notification
 from myproject.settings import AUTH_USER_MODEL
 
 
-def escalate_incident(incident: Incident):
+def escalate_incident(incident: Incident, escalation_author: AUTH_USER_MODEL):
     current_datetime = now()
     for i in range(min(incident.level + 1, 4), 5):
         if i == 4:
-            create_escalation_message(incident, i, None)
+            create_escalation_message(incident, i, escalation_author, None)
             incident.level = i
             incident.is_critical = True
             incident.responsible_user = None
@@ -38,7 +38,7 @@ def escalate_incident(incident: Incident):
                                   f"Вам поручен инцидент на точке {incident.point.name}")
             notify_point_admins(incident.point, incident.name,
                                 f"Инцидент был повышен до уровня {incident.level}")
-        create_escalation_message(incident, i, duty)
+        create_escalation_message(incident, i, escalation_author, duty)
         break
 
     incident.save()

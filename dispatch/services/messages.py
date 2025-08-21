@@ -27,8 +27,8 @@ def create_escalation_error_message_duty_not_opened(incident, failed_level, not_
                                            f" не начал свое дежурство.")
 
 
-def create_escalation_message(incident: Incident, to_level: int, new_responsible_duty: Duty = None):
-    message = f"Инцидент быд поднят до уровня {to_level}."
+def create_escalation_message(incident: Incident, to_level: int, escalation_author: AUTH_USER_MODEL, new_responsible_duty: Duty = None):
+    message = f"Инцидент был поднят до уровня {to_level} пользователем {escalation_author.display_name}."
     if new_responsible_duty is not None:
         message += f" Новый ответственный дежурный: {new_responsible_duty.user} ({new_responsible_duty.role})."
     return create_system_message(incident, message)

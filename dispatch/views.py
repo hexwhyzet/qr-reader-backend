@@ -60,7 +60,7 @@ class IncidentViewSet(viewsets.ViewSet):
         serializer = IncidentSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             incident = serializer.save()
-            escalate_incident(incident)
+            escalate_incident(incident, request.user)
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
@@ -132,7 +132,7 @@ class IncidentViewSet(viewsets.ViewSet):
         if incident.responsible_user != request.user and not is_admin:
             return Response({"error": "Вы не являетесь ответственным за этот инцидент"}, status=403)
 
-        escalate_incident(incident)
+        escalate_incident(incident, request.user)
 
         serializer = IncidentSerializer(incident)
         return Response(serializer.data)
