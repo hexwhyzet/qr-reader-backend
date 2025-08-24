@@ -1,8 +1,9 @@
 # dispatch/cron.py
 from datetime import timedelta, datetime
 
+from dispatch.services.access import dispatch_admins
 from dispatch.services.duties import get_current_duties, get_duty_point_by_duty_role
-from dispatch.services.notification import create_and_notify, notify_point_admins
+from dispatch.services.notification import create_and_notify, notify_users
 from dispatch.utils import now
 
 
@@ -30,10 +31,12 @@ def need_to_open_notification():
             )
             duty.save()
 
-            points = get_duty_point_by_duty_role(duty.role)
-            for point in points:
-                notify_point_admins(
-                    point,
-                    f"Пользователь {duty.user.display_name} не начал дежурство",
-                    f"Пользователь {duty.user.display_name} не начал дежурство в роли {duty.role.name}, оно было открыто автоматически.",
-                )
+            admins = list(dispatch_admins())
+            for point in get_duty_point_by_duty_role(duty.role):
+                admins.extend(point.admins.all())
+
+            notify_users(
+                admins,
+                f"Пользователь {duty.user.display_name} не начал дежурство",
+                f"Пользователь {duty.user.display_name} не начал дежурство в роли {duty.role.name}, оно было открыто автоматически.",
+            )
